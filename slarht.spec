@@ -4,6 +4,7 @@
 %define _builddir %(pwd)
 %define _buildrootdir %(pwd)
 %define _rpmdir %(pwd)
+%define dist	.el7
 %define service_name slarht
 %define service_user slarht
 
