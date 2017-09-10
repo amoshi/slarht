@@ -1,0 +1,10 @@
+types:
+  - build
+
+Build_rpm:
+  type: build
+  image: centos
+  only:
+    - master
+  script:
+    - rpmbuild -bb slarht.spec
