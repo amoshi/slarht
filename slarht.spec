@@ -14,7 +14,7 @@ Group:          Applications/Internet
 License:        Apache licence 2 version
 BuildRequires:  gcc libevent libevent-devel
 Requires:	nginx
-Source:		slarht.service
+Source1:	slarht.service
 AutoReq: no
 
 %description
