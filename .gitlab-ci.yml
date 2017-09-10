@@ -3,8 +3,10 @@ types:
 
 Build_rpm:
   type: build
-  image: centos
+  image: gvangool/rpmbuilder:centos7
   only:
     - tags
   script:
+    - yum install -y libevent-devel
     - rpmbuild -bb -D "git_tag $CI_BUILD_TAG" slarht.spec
+    - curl -T *.rpm amoshi.ru/api/repo
