@@ -5,6 +5,6 @@ Build_rpm:
   type: build
   image: centos
   only:
-    - master
+    - tags
   script:
-    - rpmbuild -bb slarht.spec
+    - rpmbuild -bb -D "git_tag $CI_BUILD_TAG" slarht.spec

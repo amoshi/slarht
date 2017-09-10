@@ -1,0 +1,22 @@
+After=network.service
+Conflicts=shutdown.target reboot.target halt.target
+
+[Service]
+Type=simple
+TimeoutStartSec=0
+TimeoutStopSec=30
+Restart=always
+RestartSec=10
+ExecStart=/usr/bin/slarht
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+#TasksMax=infinity
+TimeoutStartSec=10
+#Restart=on-failure
+StartLimitBurst=3
+StartLimitInterval=60s
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
