@@ -14,7 +14,7 @@ Summary:        Simple Lightweight Artefacts Restful HTtp repository
 Group:          Applications/Internet
 License:        Apache licence 2 version
 BuildRequires:  gcc libevent libevent-devel
-Requires:	nginx
+Requires:	nginx createrepo
 Source1:	slarht.service
 AutoReq: no
 
