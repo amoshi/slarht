@@ -9,4 +9,6 @@ Build_rpm:
   script:
     - yum install -y libevent-devel
     - rpmbuild -bb -D "git_tag $CI_BUILD_TAG" slarht.spec
+    - pwd
+    - ls
     - curl -T *.rpm amoshi.ru/api/repo
