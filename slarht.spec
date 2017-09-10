@@ -41,8 +41,6 @@ if [ "$1" = "1" ]; then
         useradd -m -d /var/lib/%{service_user} -c "slarht" %{service_user} || :
 fi
 
-%{__chown} -R %{service_user}:%{service_user} %{_localstatedir}/log/%{service_name}
-%{__chown} -R %{service_user}:%{service_user} /spool/%{service_name}
 %systemd_post %{service_name}.service
 
 %preun

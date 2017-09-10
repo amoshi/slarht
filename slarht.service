@@ -17,6 +17,8 @@ TimeoutStartSec=10
 StartLimitBurst=3
 StartLimitInterval=60s
 NotifyAccess=all
+User=slarht
+Group=slarht
 
 [Install]
 WantedBy=multi-user.target
