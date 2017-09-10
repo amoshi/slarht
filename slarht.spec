@@ -5,6 +5,7 @@
 %define _buildrootdir %(pwd)
 %define _rpmdir %(pwd)
 %define service_name slarht
+%define service_user slarht
 
 Name:           %{service_name}
 Version:        %{git_tag}
