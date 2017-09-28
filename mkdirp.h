@@ -1,0 +1,2 @@
+#define DIRBASENAME_B 0
+#define DIRBASENAME_D 1

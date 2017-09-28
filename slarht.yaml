@@ -1,0 +1,82 @@
+config: file
+listen: 0.0.0.0
+port: 8000
+
+user:
+  - name: slarht
+    passwd: ohijhiugyug 
+  - name: ciuser
+    passwd: cipass
+  - name: readuser
+    passwd: readpasswd
+  - name: dockeruser
+    passwd: dockerpasswd
+
+storage:
+  - name: stor1
+    type: fs
+    directory: /var/www/repo/
+
+repository:
+  - name: yumrepo
+    uri: /slarht/yumrepo
+    type: yum
+    acl_user:
+      - slarht
+      - ciuser
+    acl_ro_user:
+      - readuser
+    acl_network:
+      - 127.0.0.1
+    acl_ro_network:
+      - 192.168.1.1
+    max_size: 8g
+    max_version_artifacts: 5
+    old_version_repo: yumrepo_old
+    filesystem: /var/www/repo/yum
+#    storage: stor1
+  - name: dockerrepo
+    uri: /slarht/dockerrepo
+    type: docker
+    acl_user:
+      - slarht
+      - dockeruser
+    acl_network:
+      - 0.0.0.0
+    max_size: 16g
+    max_version_artifacts: 2
+    old_version_repo: dockerrepo_old
+    filesystem: /var/www/
+  - name: aptrepo
+    uri: /slarht/aptrepo
+    type: apt
+    acl_user:
+      - slarht
+      - ciuser
+    acl_ro_user:
+      - readuser
+    acl_network:
+      - 127.0.0.1
+    acl_ro_network:
+      - 192.168.1.1
+    max_size: 8g
+    max_version_artifacts: 10
+    old_version_repo: aptrepo_old
+    filesystem: /var/apt
+#    storage: stor1
+  - name: generic
+    uri: /slarht/gen
+    type: generic
+    acl_user:
+      - slarht
+      - ciuser
+    acl_ro_user:
+      - readuser
+    acl_network:
+      - 127.0.0.1
+    acl_ro_network:
+      - 192.168.1.1
+    max_size: 8g
+    max_version_artifacts: 10
+    old_version_repo: gen_old
+    filesystem: /spool/gen

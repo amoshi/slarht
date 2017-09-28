@@ -15,7 +15,7 @@ Summary:        Simple Lightweight Artefacts Restful HTtp repository
 Group:          Applications/Internet
 License:        Apache licence 2 version
 BuildRequires:  gcc libevent libevent-devel
-Requires:	nginx createrepo
+Requires:	nginx createrepo reprepro
 Source1:	slarht.service
 AutoReq: no
 
@@ -24,17 +24,21 @@ Simple Lightweight Artefacts Restful HTtp repository
 
 %build
 cd %{_sourcedir}
-cc -levent evhttp.c -o slarht
+#cc -levent evhttp.c -o slarht
+make
 
 %install
 %{__mkdir_p} ${RPM_BUILD_ROOT}/usr/bin/
+%{__mkdir_p} ${RPM_BUILD_ROOT}/etc/slarht/
 %{__mkdir_p} $RPM_BUILD_ROOT%{_unitdir}
-%{__cp} slarht ${RPM_BUILD_ROOT}/usr/bin/
+%{__cp} caches/slarht ${RPM_BUILD_ROOT}/usr/bin/
+%{__cp} slarht.yaml ${RPM_BUILD_ROOT}/etc/slarht/
 %{__cp} %{SOURCE1} $RPM_BUILD_ROOT%{_unitdir}
 
 %files
 /usr/bin/%{service_name}
 %{_unitdir}/%{service_name}.service
+%config(noreplace) %{_sysconfdir}/slarht/slarht.yaml
 
 %post
 if [ "$1" = "1" ]; then
