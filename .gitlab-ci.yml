@@ -7,7 +7,7 @@ Build_rpm:
   only:
     - tags
   script:
-    - yum install -y libevent-devel
+    - yum install -y libevent-devel libyaml-devel
     - rpmbuild -bb -D "git_tag $CI_BUILD_TAG" slarht.spec
     - >-
       curl -H "X-Auth-Token: $SLARHT_TOKEN" -T x86_64/*.rpm amoshi.ru/api/repo/
