@@ -83,18 +83,14 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	}
 
 	printf("enum=%d\n",evhttp_request_get_command(req));
-	puts("10");
  
 	printf("Received a %d request for %s\nHeaders:\n", ht->method, http_uri);
-	puts("12");
 	headers = evhttp_request_get_input_headers(req);
-	puts("0");
 	for (i=0, header = headers->tqh_first; header; header = header->next.tqe_next, i++)
 	{
 		printf("  %s: %s\n", header->key, header->value);
 	}
 	ht->headers_len=i;
-	puts("1");
 	ht->headers = malloc (sizeof (http_kv)*ht->headers_len );
 	for (i=0, header = headers->tqh_first; header; header = header->next.tqe_next, i++)
 	{
@@ -127,24 +123,16 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		ht->query_size = http_uri_size;
 	}
 	route_resolver(sc_general, ht);
-	puts("1");
 	uint64_t filepath_size = strlen(ht->query+ht->sc_repository->uri_size);
-	puts("1.0");
 	ht->filepath_size = filepath_size;
-	puts("1.1");
-	printf( "%s + %zu with size %llu ( %llu - %zu )\n" , ht->query , ht->sc_repository->uri_size , filepath_size, ht->query_size, ht->sc_repository->uri_size );
 	ht->filepath = copy_init_n(ht->query+ht->sc_repository->uri_size, filepath_size+1);
-	puts("2");
 	ht->filename = basename(ht->filepath,DIRBASENAME_B,filepath_size);
 	ht->filename_size = strlen(ht->filename);
-	puts("3");
 	ht->dirname = basename(ht->filepath,DIRBASENAME_D,filepath_size);
 	ht->dirname_size = strlen(ht->dirname);
-	puts("4");
 	printf("filepath = %s{%d}\n",ht->filepath,ht->filepath_size);
 	printf("filename = %s{%d}\n",ht->filename,ht->filename_size);
 	printf("dirname = %s{%d}\n",ht->dirname,ht->dirname_size);
-	puts("5");
 	puts("finish matching");
 	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_APT )
 	{
@@ -161,28 +149,19 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		FILE *fbuf;
 		if ( file_cache == 1 )
 		{
-			puts("1");
 			file_cache_path = malloc(UCHAR_MAX);
-			puts("2");
 			char file_cache_dir[UCHAR_MAX];
-			puts("3");
 			struct timespec now_time;
-			puts("4");
 			clock_gettime(CLOCK_REALTIME, &now_time);
-			puts("5");
 			snprintf(file_cache_dir,UCHAR_MAX-1,"%s/%lld.%09ld/%s",sc_general->tmpdir,now_time.tv_sec,now_time.tv_nsec,ht->dirname);
-			puts("6");
 			snprintf(file_cache_path,UCHAR_MAX-1,"%s/%s",file_cache_dir,ht->filename);
-			puts("7");
 			mkdirp(file_cache_dir);
-			puts("8");
 			printf("file_cache_path (%p) is %s\n", file_cache_path, file_cache_path);
 			printf("file_cache_dir (%p) is %s\n", file_cache_dir, file_cache_dir);
 			
 			if ( ( fbuf = fopen (file_cache_path, "w") ) == NULL )
 			{	return;
 			}
-			puts("9");
 			ht->file_cache_path = file_cache_path;
 		}
 		char *ptr_to_memcpy = ht->data;
