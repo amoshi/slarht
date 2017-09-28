@@ -30,15 +30,18 @@ make
 %install
 %{__mkdir_p} ${RPM_BUILD_ROOT}/usr/bin/
 %{__mkdir_p} ${RPM_BUILD_ROOT}/etc/slarht/
+%{__mkdir_p} ${RPM_BUILD_ROOT}/etc/sysconfig/
 %{__mkdir_p} $RPM_BUILD_ROOT%{_unitdir}
 %{__cp} caches/slarht ${RPM_BUILD_ROOT}/usr/bin/
 %{__cp} slarht.yaml ${RPM_BUILD_ROOT}/etc/slarht/
+%{__cp} slarht.sysconfig ${RPM_BUILD_ROOT}/etc/sysconfig/slarht
 %{__cp} %{SOURCE1} $RPM_BUILD_ROOT%{_unitdir}
 
 %files
 /usr/bin/%{service_name}
 %{_unitdir}/%{service_name}.service
 %config(noreplace) %{_sysconfdir}/slarht/slarht.yaml
+%config(noreplace) %{_sysconfdir}/sysconfig/slarht
 
 %post
 if [ "$1" = "1" ]; then
