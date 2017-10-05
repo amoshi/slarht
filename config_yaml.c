@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <math.h>
 #include <time.h>
+#include <sys/stat.h>
 #include "config_yaml.h"
 
 char* copy_init(char *str)
@@ -609,7 +610,7 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 								sc_shell[sh_i].sc_script->scriptpath = scriptfile;
 								sc_shell[sh_i].sc_script->scriptpath_len = strlen(scriptfile);
 								fclose(fd_script);
-								chmod(scriptfile,755);
+								chmod(scriptfile, S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH );
 								event->type = 250;
 								if ( event->type == 6 ) printf("4parse_ %s\n",event->data.scalar.value);
 								else			printf("4type %d\n",event->type );

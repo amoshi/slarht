@@ -72,6 +72,7 @@ char *basename(char *str, int mod, size_t str_size)
 	if ( mod == DIRBASENAME_D )
 	{
 		strncpy(s,str,b);
+		s[b]='\0';
 	}
 	else
 	{
