@@ -14,6 +14,7 @@ int artifact_write(wrdata *write_data)
 		snprintf(artifact_dest_path,FILENAME_MAX-1,"%s/%s",artifact_dest_dir,write_data->filename);
 	}
 	mkdirp(artifact_dest_dir);
+	printf("writing file: %s\n", artifact_dest_path);
 	if ( ( artifact_dest = fopen (artifact_dest_path, "w") ) == NULL )
 	{
 		fprintf(stderr, "Cannot open file: %s", artifact_dest_path );

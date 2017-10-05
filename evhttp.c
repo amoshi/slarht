@@ -123,6 +123,7 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		ht->query_size = http_uri_size;
 	}
 	route_resolver(sc_general, ht);
+	printf("repo: %s\n", ht->sc_repository->name);
 	uint64_t filepath_size = strlen(ht->query+ht->sc_repository->uri_size);
 	ht->filepath_size = filepath_size;
 	ht->filepath = copy_init_n(ht->query+ht->sc_repository->uri_size, filepath_size+1);
