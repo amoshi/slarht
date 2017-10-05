@@ -80,3 +80,29 @@ repository:
     max_version_artifacts: 10
     old_version_repo: gen_old
     filesystem: /spool/gen
+    shell_before:
+      - key: dirname
+        value: /d/
+        match: has
+        script:
+          - export MESG="prepare put to repo"
+          - echo $MESG
+          - exit 0
+      - key: filename
+        value: hren
+        match: startswith
+        script:
+          - export MESG="$slarht_filename put to repo at url $slarht_url"
+          - echo $MESG
+          - exit 0
+    shell_between:
+      - key: filepath
+        value: 
+        match: endswith
+        script:
+          - ls -la
+          - git pull
+    shell_after:
+      script:
+        - export MESG="after"
+        - echo $MESG

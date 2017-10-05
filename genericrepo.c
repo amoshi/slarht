@@ -9,6 +9,8 @@ int genericrepo(http_traf *ht)
 	printf("HTTP query: %s\n", ht->query);
 	printf("HTTP method: %s\n", ht->method);
 	printf("HTTP method_id: %d\n", ht->method_id);
+	printf("dirname=%s\n", ht->dirname);
+	printf("filename=%s\n", ht->filename);
 	//char base_yum_rpm_path[]="/var/www/repo/yum";
 	char *repo_directory = ht->sc_repository->filesystem;
 	char *command = malloc(UCHAR_MAX);
@@ -47,11 +49,14 @@ int genericrepo(http_traf *ht)
                 printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->storage=%s\n",i,ht->sc_repository->storage);
                 printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->uri=%s\n",i,ht->sc_repository->uri);
                 printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->uri_size=%"PRIu64"\n",i,ht->sc_repository->uri_size);
+	do_shell_script(ht->sc_repository->before_script, ht->sc_repository->before_script_size);
+	do_shell_script(ht->sc_repository->between_script, ht->sc_repository->between_script_size);
 	if ( ht->method_id == REQ_PUT )
 	{
 		int rc;
 		if ( ( rc = artifact_write(&write_data) ) != 0 )	return rc;
 	}
+	do_shell_script(ht->sc_repository->after_script, ht->sc_repository->after_script_size);
 	printf("genericrepo stop\n");
 	printf("==================================================\n");
 }

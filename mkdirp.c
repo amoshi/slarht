@@ -8,7 +8,7 @@
 
 size_t get_rec_dir (char *str, size_t len, uint64_t num, int *fin)
 {
-	printf("go to %"PRIu64"\n",num);
+	//printf("go to %"PRIu64"\n",num);
 	char *cursor = str, *cursor_tmp;
 	uint64_t i;
 	for ( i=0; i<num; i++ )
@@ -71,11 +71,11 @@ char *basename(char *str, int mod, size_t str_size)
 	}
 	if ( mod == DIRBASENAME_D )
 	{
-		strncat(s,str,b);
+		strncpy(s,str,b);
 	}
 	else
 	{
-		strncat(s,str+b+1,str_size-b);
+		strncpy(s,str+b+1,str_size-b);
 	}
 	return s;
 }
