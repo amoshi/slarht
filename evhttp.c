@@ -76,7 +76,7 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 //		case EVHTTP_REQ_CONNECT: ht->method = alloc_and_copy_n("CONNECT", 7); ht->method_size=7; break;
 		default:
 			evbuffer_add_printf(returnbuffer, "Method not allowed!\n");
-			evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
+			evhttp_send_reply(req, HTTP_BADMETHOD, "Client", returnbuffer);
 			evbuffer_free(returnbuffer);
 			return;
 			break;
@@ -122,7 +122,14 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		ht->query = http_uri;
 		ht->query_size = http_uri_size;
 	}
-	route_resolver(sc_general, ht);
+	if ( route_resolver(sc_general, ht) == -1 )
+	{
+		puts("no defaults, stopping query");
+		evbuffer_add_printf(returnbuffer, "ERROR, no routes!\n");
+		evhttp_send_reply(req, HTTP_NOTIMPLEMENTED, "Client", returnbuffer);
+		evbuffer_free(returnbuffer);
+		return;
+	}
 	printf("repo: %s\n", ht->sc_repository->name);
 	uint64_t filepath_size = strlen(ht->query+ht->sc_repository->uri_size);
 	ht->filepath_size = filepath_size;

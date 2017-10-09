@@ -22,7 +22,7 @@ size_t startswith_matches_n(char *str, char *match, size_t n)
 slarht_conf_repository *route_get_repository(slarht_conf_general *sc_general, char *query)
 {
 	uint64_t i, max = 0, rc;
-	slarht_conf_repository *ret;
+	slarht_conf_repository *ret, *def = NULL;
 	size_t sc_repository_size = sc_general->sc_repository_size;
 	for ( i=0; i<sc_repository_size; i++ )
 	{
@@ -33,13 +33,27 @@ slarht_conf_repository *route_get_repository(slarht_conf_general *sc_general, ch
 			max=rc;
 			ret=sc_general->scp_repository[i].sc_repository;
 		}
+		if ( sc_general->scp_repository[i].sc_repository->type == REPOSITORY_TYPE_DEFAULT )
+		{
+			def = sc_general->scp_repository[i].sc_repository;
+		}
 	}
-	return ret;
+	if ( max < 2 )
+	{
+		// NULL or ptr
+		return def;
+	}
+	else
+	{
+		return ret;
+	}
 }
 
-route_resolver(slarht_conf_general *sc_general, http_traf *ht)
+int route_resolver(slarht_conf_general *sc_general, http_traf *ht)
 {
+	printf("enter router\n");
 	uint64_t i, max = 0, rc;
+	slarht_conf_repository *def = NULL;
 	size_t sc_repository_size = sc_general->sc_repository_size;
 	for ( i=0; i<sc_repository_size; i++ )
 	{
@@ -50,5 +64,23 @@ route_resolver(slarht_conf_general *sc_general, http_traf *ht)
 			max=rc;
 			ht->sc_repository=sc_general->scp_repository[i].sc_repository;
 		}
+		if ( sc_general->scp_repository[i].sc_repository->type == REPOSITORY_TYPE_DEFAULT )
+		{
+			def = sc_general->scp_repository[i].sc_repository;
+		}
+	}
+	if ( max < 2 )
+	{
+		// NULL or ptr
+		puts("default route context");
+		ht->sc_repository=sc_general->scp_repository[i].sc_repository = def;
+		if ( def == NULL )	puts("no default route contexts");
+		printf("end  router\n");
+		return -1;
+	}
+	else
+	{
+		printf("end  router\n");
+		return 0;
 	}
 }

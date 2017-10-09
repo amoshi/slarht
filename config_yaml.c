@@ -112,7 +112,7 @@ void sc_general_print(slarht_conf_general *sc_general)
 		printf("\tmas1(%p)\n",sc_general->scp_repository[i].sc_repository->before_script);
 		if ( sc_script_size == -1 )
 		{
-			printf("-------------shells: onlyshell---------------\n");
+			printf("-------------shells: before onlyshell---------------\n");
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->before_script[0].sc_script->scriptpath=%s\n",i,sc_general->scp_repository[i].sc_repository->before_script[0].sc_script->scriptpath);
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->before_script[0].sc_script->scriptpath_len=%zu\n",i,sc_general->scp_repository[i].sc_repository->before_script[0].sc_script->scriptpath_len);
 		}
@@ -134,7 +134,7 @@ void sc_general_print(slarht_conf_general *sc_general)
 		sc_script_size = sc_general->scp_repository[i].sc_repository->between_script_size;
 		if ( sc_script_size == -1 )
 		{
-			printf("-------------shells: onlyshell---------------\n",sc_script_size);
+			printf("-------------shells: between onlyshell---------------\n",sc_script_size);
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->between_script[0].sc_script->scriptpath=%s\n",i,sc_general->scp_repository[i].sc_repository->between_script[0].sc_script->scriptpath);
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->between_script[0].sc_script->scriptpath_len=%zu\n",i,sc_general->scp_repository[i].sc_repository->between_script[0].sc_script->scriptpath_len);
 		}
@@ -155,7 +155,7 @@ void sc_general_print(slarht_conf_general *sc_general)
 		sc_script_size = sc_general->scp_repository[i].sc_repository->after_script_size;
 		if ( sc_script_size == -1 )
 		{
-			printf("-------------shells: onlyshell---------------\n",sc_script_size);
+			printf("-------------shells: after onlyshell---------------\n",sc_script_size);
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->after_script[0].sc_script->scriptpath=%s\n",i,sc_general->scp_repository[i].sc_repository->after_script[0].sc_script->scriptpath);
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->after_script[0].sc_script->scriptpath_len=%zu\n",i,sc_general->scp_repository[i].sc_repository->after_script[0].sc_script->scriptpath_len);
 		}
@@ -535,18 +535,14 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 
 				//parse_next(parser,event);
 				//if ( event->type != YAML_SCALAR_EVENT )	parse_next(parser,event);
-			//	printf("type%d\n",event->type );
-			//	printf("MAPPINGS %d\n",YAML_MAPPING_START_EVENT );
-			//	printf("MAPPINGE %d\n",YAML_MAPPING_END_EVENT );
-			//	printf("SEQUENCES %d\n",YAML_SEQUENCE_START_EVENT );
-			//	printf("SEQUENCEE %d\n",YAML_SEQUENCE_END_EVENT );
 				if ( event->type == YAML_MAPPING_START_EVENT )
 				{ // for matching logic
 					parse_next(parser,event);
+					int endfor;
 					if ( event->type != YAML_SCALAR_EVENT )	parse_next(parser,event);
 					printf("1parse_ %s\n",event->data.scalar.value);
 					printf("event->data.scalar.value=%s\n",event->data.scalar.value);
-					for ( sh_i=0; event->type != YAML_SEQUENCE_END_EVENT; sh_i++, parse_next(parser,event) )
+					for ( sh_i=0, endfor=0; event->type != YAML_SEQUENCE_END_EVENT; sh_i++, parse_next(parser,event) )
 					{
 						if ( event->type == YAML_MAPPING_START_EVENT )
 						{
@@ -563,7 +559,12 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 							printf("&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&%"PRIu64"&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n", sh_i);
 							if ( event->type == 6 ) printf("0parse_ %s\n",event->data.scalar.value);
 							else			printf("0type %d\n",event->type );
-							if ( event->type == YAML_MAPPING_END_EVENT ) break;
+							printf ( "YAML_MAPPING_END_EVENT %d\n", YAML_MAPPING_END_EVENT);
+							if ( event->type == YAML_MAPPING_END_EVENT )
+							{
+								endfor=1;
+								break;
+							}
 							if ( !strcmp(event->data.scalar.value, "key") )
 							{
 								puts("\tkey context");
@@ -611,7 +612,9 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 								sc_shell[sh_i].sc_script->scriptpath_len = strlen(scriptfile);
 								fclose(fd_script);
 								chmod(scriptfile, S_IRUSR | S_IXUSR | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH );
+								printf("event->type=%d\n",event->type);
 								event->type = 250;
+								printf("event->type=%d\n",event->type);
 								if ( event->type == 6 ) printf("4parse_ %s\n",event->data.scalar.value);
 								else			printf("4type %d\n",event->type );
 							}
@@ -647,19 +650,25 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 									sc_shell[sh_i].match = SC_REPOSITORY_SHELL_MATCH_REGEXP;
 								}
 							}
-							else puts("else context");
+							else { puts("else context"); parse_next(parser,event); }
 						} while ( event->type != YAML_MAPPING_END_EVENT );
+						if (endfor == 1) break;
 					}
+					printf("shonl=%d\n",shellonly);
+					sh_i++;
 					if ( shellonly == 1 )
 					{
 						sc_shell[sh_i].value_size=0;
 						sc_shell[sh_i].match=0;
+							puts("4SHELL_PREAFTER");
 						if (shell_type==SC_CONTEXT_SHELL_BEFORE)
 						{
+							puts("4SHELL_BEFORE");
 							sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->before_script_size = -1;
 						}
 						else if (shell_type==SC_CONTEXT_SHELL_BETWEEN)
 						{
+							puts("4SHELL_BETWEEN");
 							sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->between_script_size = -1;
 						}
 						else if (shell_type==SC_CONTEXT_SHELL_AFTER)
@@ -678,64 +687,20 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 						}
 						else if (shell_type==SC_CONTEXT_SHELL_BETWEEN)
 						{
+							puts("2SHELL_BETWEEN");
 							sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->between_script_size = sh_i;
+							printf("between size is %"PRIu64"\n", sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->between_script_size);
 						}
 						else if (shell_type==SC_CONTEXT_SHELL_AFTER)
 						{
 							puts("2SHELL_AFTER");
 							sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->after_script_size = sh_i;
+							printf("after size is %"PRIu64"\n", sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->after_script_size);
 						}
 					}
 				}
-				//else 
-				//{
-					//puts("\tsimply script context");
-					//char *scriptfile = malloc(FILENAME_MAX);
-					//char *scriptdir = malloc(FILENAME_MAX);
-					//struct timespec now_time;
-					//clock_gettime(CLOCK_REALTIME, &now_time);
-					//snprintf(scriptdir, FILENAME_MAX-1, "%s/scr%lld.%09ld",sc_general->tmpdir,now_time.tv_sec,now_time.tv_nsec);
-					//snprintf(scriptfile, FILENAME_MAX-1, "%s/%"PRIu64".sh",scriptdir,sh_i);
-					//size_t scriptfilename_size = strlen(scriptfile);
-					//mkdirp(scriptdir);
-					//FILE *fd_script = fopen(scriptfile, "w");
-					//parse_next(parser,event);
-					//if ( event->type == YAML_SEQUENCE_START_EVENT ) parse_next(parser,event);
-					//if ( event->type == 6 ) printf("3parse_ %s\n",event->data.scalar.value);
-					//else			printf("3type %d\n",event->type );
-					//sc_shell[sh_i].sc_script = malloc (sizeof(slarht_conf_script));
-					//while ( event->type == YAML_SCALAR_EVENT )
-					//{
-					//	fprintf(fd_script,"%s\n",event->data.scalar.value);
-					//	parse_next(parser,event);
-					//	if ( event->type == 6 ) printf("8parse_ %s\n",event->data.scalar.value);
-					//	else			printf("8type %d\n",event->type );
-					//}
-					//sc_shell[sh_i].sc_script->scriptpath = scriptfile;
-					//sc_shell[sh_i].sc_script->scriptpath_len = strlen(scriptfile);
-					//fclose(fd_script);
-					//event->type = 250;
-
-					//sc_shell[sh_i].key = 0;
-					//sc_shell[sh_i].value_size = 0;
-					//if ( event->type == 6 ) printf("4parse_ %s\n",event->data.scalar.value);
-					//else			printf("4type %d\n",event->type );
-					//if (shell_type==SC_CONTEXT_SHELL_BEFORE)
-					//{
-					//	puts("5SHELL_BETFORE");
-					//	sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->before_script_size = -1;
-					//}
-					//else if (shell_type==SC_CONTEXT_SHELL_BETWEEN)
-					//{
-					//	puts("5SHELL_BETWEEN");
-					//	sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->between_script_size = -1;
-					//}
-					//else if (shell_type==SC_CONTEXT_SHELL_AFTER)
-					//{
-					//	puts("5SHELL_AFTER");
-					//	sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->after_script_size = -1;
-					//}
-				//}
+				if ( event->type == 6 ) printf("40parse_ %s\n",event->data.scalar.value);
+				else			printf("40type %d\n",event->type );
 				if (shell_type==SC_CONTEXT_SHELL_BEFORE)
 				{
 					puts("3SHELL_BEFORE");
@@ -755,11 +720,7 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 					sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->after_script = sc_shell;
 				}
 			}
-
-
-
 		}
-
 		else if ( ptemp->ctx_id == SC_CONFIG_CTX_STORAGE )
 		{
 			printf("this is storage context\n");
@@ -818,6 +779,6 @@ void
 clean_prs(FILE ** fh, yaml_parser_t * parser, yaml_event_t * event)
 {
 	yaml_event_delete(event);
-	yaml_parser_delete(parser);
+	//yaml_parser_delete(parser);
 	fclose(*fh);
 }
