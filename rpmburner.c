@@ -66,12 +66,15 @@ int rpmburner(http_traf *ht)
 	//	status = pclose(createrepo_exec);
 
 	//}
+	do_shell_script(ht->sc_repository->between_script, ht->sc_repository->between_script_size);
 	if ( ht->method_id == REQ_PUT )
 	{
 		int rc;
 		if ( ( rc = artifact_write(&write_data) ) != 0 )	return rc;
+		do_shell_script(ht->sc_repository->before_script, ht->sc_repository->before_script_size);
 		post_write_command(&exec_data);
 	}
+	do_shell_script(ht->sc_repository->after_script, ht->sc_repository->after_script_size);
 	printf("rpmburner stop\n");
 	printf("==================================================\n");
 }
