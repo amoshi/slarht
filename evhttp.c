@@ -13,6 +13,9 @@
 #include "evhttp.h"
 #include "config_yaml.h"
 #include "mkdirp.h"
+#include "rpm.h"
+#include "generic.h"
+#include "deb.h"
 //#include "rpmburner.h"
 
 http_traf *http_traf_initialize(uint64_t size)
@@ -229,14 +232,16 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	ht->downloaduri = malloc(UCHAR_MAX);
 	snprintf(ht->downloaduri,UCHAR_MAX-1,"http://%s/%s/%s",ht->host,ht->sc_repository->uri,ht->filepath);
 
+	repo_conf *rconf = NULL;
 	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_YUM )
-		rpmburner(ht);
+		rconf = rpm_conf(ht);
 	else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_GENERIC )
-		genericrepo(ht);
+		rconf = generic_conf(ht);
 	else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_APT )
-		debburner(ht);
+		rconf = deb_conf(ht);
 	else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_DOCKER )
-		genericrepo(ht);
+		rconf = generic_conf(ht);
+	repoburner(rconf);
 	
 
 	if ( querycodetype == EVHTTP_REQ_PUT || querycodetype == EVHTTP_REQ_POST )
@@ -252,6 +257,11 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
 	evbuffer_free(returnbuffer);
 	free(ht->downloaduri);
+	if ( rconf->deploy_method=DEPLOY_METHOD_SCRIPT)
+	{
+		free(rconf->command);
+	}
+	free(rconf);
 	return;
 }
 

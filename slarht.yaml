@@ -20,7 +20,7 @@ repository:
     max_size: 8g
     max_version_artifacts: 5
     old_version_repo: genrepo_old
-    shell_before:
+    shell_between:
       script:
         - echo "$FILEPATH"
   - name: aptrepo
@@ -30,6 +30,6 @@ repository:
     max_version_artifacts: 5
     max_size: 8g
     old_version_repo: aptrepo_old
-    shell_between:
+    shell_before:
       script:
         - echo "$DIRNAME"

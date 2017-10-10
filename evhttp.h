@@ -16,6 +16,9 @@
 #define HTTP_HEADERS_MAXCOUNT 400
 #define HTTP_ARGS_MAXCOUNT 400
 #define HTTP_METHOD_CHAR_MAXSIZE 8
+#define DEPLOY_METHOD_NO 0
+#define DEPLOY_METHOD_SCRIPT 1
+#define DEPLOY_METHOD_PROXYING 2
 
 typedef struct http_kv
 {
@@ -53,3 +56,11 @@ typedef struct http_traf
         uint64_t template_size;
 	slarht_conf_repository *sc_repository;
 } http_traf;
+
+typedef struct repo_conf
+{
+	char *command;
+	size_t command_size;
+	int deploy_method;
+	http_traf *ht;
+} repo_conf;

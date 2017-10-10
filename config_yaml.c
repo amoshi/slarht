@@ -658,8 +658,8 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 					sh_i++;
 					if ( shellonly == 1 )
 					{
-						sc_shell[sh_i].value_size=0;
-						sc_shell[sh_i].match=0;
+						sc_shell->value_size=0;
+						sc_shell->match=0;
 							puts("4SHELL_PREAFTER");
 						if (shell_type==SC_CONTEXT_SHELL_BEFORE)
 						{
