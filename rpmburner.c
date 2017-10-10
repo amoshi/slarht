@@ -9,6 +9,9 @@ int rpmburner(http_traf *ht)
 	printf("HTTP query: %s\n", ht->query);
 	printf("HTTP method: %s\n", ht->method);
 	printf("HTTP method_id: %d\n", ht->method_id);
+        printf("FILEPATH=%s\n",ht->filepath);
+        printf("FILENAME=%s\n",ht->filename);
+        printf("DIRNAME=%s\n",ht->dirname);
 	//char base_yum_rpm_path[]="/var/www/repo/yum";
 	char *repo_directory = ht->sc_repository->filesystem;
 	char *command = malloc(UCHAR_MAX);
@@ -66,15 +69,15 @@ int rpmburner(http_traf *ht)
 	//	status = pclose(createrepo_exec);
 
 	//}
-	do_shell_script(ht->sc_repository->between_script, ht->sc_repository->between_script_size);
+	do_shell_script(ht->sc_repository->between_script, ht->sc_repository->between_script_size, ht);
 	if ( ht->method_id == REQ_PUT )
 	{
 		int rc;
 		if ( ( rc = artifact_write(&write_data) ) != 0 )	return rc;
-		do_shell_script(ht->sc_repository->before_script, ht->sc_repository->before_script_size);
+		do_shell_script(ht->sc_repository->before_script, ht->sc_repository->before_script_size, ht);
 		post_write_command(&exec_data);
 	}
-	do_shell_script(ht->sc_repository->after_script, ht->sc_repository->after_script_size);
+	do_shell_script(ht->sc_repository->after_script, ht->sc_repository->after_script_size, ht);
 	printf("rpmburner stop\n");
 	printf("==================================================\n");
 }

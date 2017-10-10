@@ -12,7 +12,7 @@ repository:
     old_version_repo: yumrepo_old
     shell_after:
       script:
-        - echo "after shell"
+        - echo "filename=$FILENAME; filepath=$FILEPATH; dirname=$DIRNAME; query=$QUERY; fulluri=$FULL_URI; method=$HTTP_METHOD; dir=$REPOSITORY_DIR; reponame=$REPOSITORY_NAME; host=$HTTP_HOST"
   - name: genrepo
     uri: /slarht/genrepo
     type: generic
@@ -22,7 +22,7 @@ repository:
     old_version_repo: genrepo_old
     shell_before:
       script:
-        - echo "before shell"
+        - echo "$FILEPATH"
   - name: aptrepo
     uri: /slarht/aptrepo
     type: apt
@@ -32,4 +32,4 @@ repository:
     old_version_repo: aptrepo_old
     shell_between:
       script:
-        - echo "between shell"
+        - echo "$DIRNAME"

@@ -69,14 +69,19 @@ int route_resolver(slarht_conf_general *sc_general, http_traf *ht)
 			def = sc_general->scp_repository[i].sc_repository;
 		}
 	}
-	if ( max < 2 )
+	if ( max != ht->sc_repository->uri_size )
 	{
-		// NULL or ptr
 		puts("default route context");
-		ht->sc_repository=sc_general->scp_repository[i].sc_repository = def;
-		if ( def == NULL )	puts("no default route contexts");
+		if ( def == NULL )
+		{
+			puts("no default route contexts");
+			return -1;
+		}
+		else
+		{
+			ht->sc_repository=def;
+		}
 		printf("end  router\n");
-		return -1;
 	}
 	else
 	{

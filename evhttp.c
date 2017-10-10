@@ -60,6 +60,9 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	char *data;
 	char *file_cache_path;
 	uint64_t i, file_cache = 0;
+	char *nohost = copy_init("nohost");;
+	ht->host = nohost;
+	ht->host_size = 7;
 
 	ht->method_id=evhttp_request_get_command(req);
 	int querycodetype=ht->method_id;
@@ -96,6 +99,8 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	{
 		ht->headers[i].key = header->key;
 		ht->headers[i].value = header->value;
+		if ( !strcasecmp(ht->headers[i].key, "Host") )
+			ht->host=header->value, ht->host_size=strlen( ht->host );
 	}
  
 	buf = evhttp_request_get_input_buffer(req);
@@ -217,6 +222,8 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 			ht->args = NULL;
 		}
 //	}
+	ht->downloaduri = malloc(UCHAR_MAX);
+	snprintf(ht->downloaduri,UCHAR_MAX-1,"%s/%s",ht->host,ht->filepath);
 
 	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_YUM )
 		rpmburner(ht);
@@ -237,12 +244,13 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	}
 
 	puts("");
-	evbuffer_add_printf(returnbuffer, "OK!\n");
+	evbuffer_add_printf(returnbuffer, "{\n \"repo\":\"%s\",\n \"path\": \"%s\",\n \"created\":\"%s\",\n \"createdBy\":\"%s\",\n \"downloadUri\":\"%s\",\n \"size\":%zu,\n \"checksums\":\n {\n  \"sha1\": \"%s\",\n \"md5\":\"%s\"\n }\n}\n",ht->sc_repository->name, ht->filepath, "no", "no", ht->downloaduri, ht->data_size, "no","no");
 	evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
 	evbuffer_free(returnbuffer);
+	free(ht->downloaduri);
 	return;
 }
- 
+
 int main(int argc, char **argv)
 {
 	char *config_path = argc ? argv[1] : "/etc/slarht/slarht.yaml";

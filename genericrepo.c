@@ -49,14 +49,14 @@ int genericrepo(http_traf *ht)
                 printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->storage=%s\n",i,ht->sc_repository->storage);
                 printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->uri=%s\n",i,ht->sc_repository->uri);
                 printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->uri_size=%"PRIu64"\n",i,ht->sc_repository->uri_size);
-	do_shell_script(ht->sc_repository->before_script, ht->sc_repository->before_script_size);
-	do_shell_script(ht->sc_repository->between_script, ht->sc_repository->between_script_size);
+	do_shell_script(ht->sc_repository->before_script, ht->sc_repository->before_script_size, ht);
+	do_shell_script(ht->sc_repository->between_script, ht->sc_repository->between_script_size, ht);
 	if ( ht->method_id == REQ_PUT )
 	{
 		int rc;
 		if ( ( rc = artifact_write(&write_data) ) != 0 )	return rc;
 	}
-	do_shell_script(ht->sc_repository->after_script, ht->sc_repository->after_script_size);
+	do_shell_script(ht->sc_repository->after_script, ht->sc_repository->after_script_size, ht);
 	printf("genericrepo stop\n");
 	printf("==================================================\n");
 }

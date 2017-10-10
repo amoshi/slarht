@@ -43,20 +43,50 @@ post_write_command(exdata *exec_data)
 	free(field);
 }
 
-do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size)
+do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *ht)
 {
+	if (sc_shell_size < 1 && sc_shell_size !=-1)
+	{
+		puts("nothing to do");
+		return;
+	}
 	FILE *script_exec;
+	size_t execute_size = SHRT_MAX;
+	char *execute = malloc(execute_size);
+	printf("export FILENAME=\"%s\"; export FILEPATH=\"%s\"; export DIRNAME=\"%s\"; export QUERY=\"%s\"; export FULL_URI=\"%s\"; export HTTP_METHOD=\"%s\"; export REPOSITORY_DIR=\"%s\"; export REPOSITORY_NAME=\"%s\"; export HTTP_HOST=\"%s\"; %s",
+					ht->filename,
+					ht->filepath,
+					ht->dirname,
+					ht->query,
+					ht->full_uri,
+					ht->method,
+					ht->sc_repository->filesystem,
+					ht->sc_repository->name,
+					ht->host,
+					sc_shell->sc_script->scriptpath);
+	snprintf(execute,execute_size-1,"export FILENAME=\"%s\"; export FILEPATH=\"%s\"; export DIRNAME=\"%s\"; export QUERY=\"%s\"; export FULL_URI=\"%s\"; export HTTP_METHOD=\"%s\"; export REPOSITORY_DIR=\"%s\"; export REPOSITORY_NAME=\"%s\"; export HTTP_HOST=\"%s\"; %s",
+					ht->filename,
+					ht->filepath,
+					ht->dirname,
+					ht->query,
+					ht->full_uri,
+					ht->method,
+					ht->sc_repository->filesystem,
+					ht->sc_repository->name,
+					ht->host,
+					sc_shell->sc_script->scriptpath);
 	int status;
 	char *field = malloc(EXECUTE_STDOUT_READLENGTH);
 	if ( sc_shell_size == -1 )
 	{
-		printf("execute: %s\n", sc_shell->sc_script->scriptpath);
-		script_exec = popen(sc_shell->sc_script->scriptpath, "r");
+		printf("execute: %s\n", execute);
+		script_exec = popen(execute, "r");
 		if (script_exec == NULL)
-			fprintf(stderr,"Failed execute script: %s\n", sc_shell->sc_script->scriptpath);
+			fprintf(stderr,"Failed execute script: %s\n", execute);
 		while (fgets(field, EXECUTE_STDOUT_READLENGTH-1, script_exec) != NULL)
 			printf("%s", field);
 		status = pclose(script_exec);
 	}
 	free(field);
+	free(execute);
 }
