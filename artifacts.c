@@ -53,7 +53,7 @@ do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *h
 	FILE *script_exec;
 	size_t execute_size = SHRT_MAX;
 	char *execute = malloc(execute_size);
-	printf("export FILENAME=\"%s\"; export FILEPATH=\"%s\"; export DIRNAME=\"%s\"; export QUERY=\"%s\"; export FULL_URI=\"%s\"; export HTTP_METHOD=\"%s\"; export REPOSITORY_DIR=\"%s\"; export REPOSITORY_NAME=\"%s\"; export HTTP_HOST=\"%s\"; %s",
+	printf("export FILENAME=\"%s\"; export FILEPATH=\"%s\"; export DIRNAME=\"%s\"; export QUERY=\"%s\"; export FULL_URI=\"%s\"; export HTTP_METHOD=\"%s\"; export REPOSITORY_DIR=\"%s\"; export REPOSITORY_NAME=\"%s\"; export HTTP_HOST=\"%s\"; export TEMPLATE=\"%s\"; %s",
 					ht->filename,
 					ht->filepath,
 					ht->dirname,
@@ -63,8 +63,9 @@ do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *h
 					ht->sc_repository->filesystem,
 					ht->sc_repository->name,
 					ht->host,
+					ht->template,
 					sc_shell->sc_script->scriptpath);
-	snprintf(execute,execute_size-1,"export FILENAME=\"%s\"; export FILEPATH=\"%s\"; export DIRNAME=\"%s\"; export QUERY=\"%s\"; export FULL_URI=\"%s\"; export HTTP_METHOD=\"%s\"; export REPOSITORY_DIR=\"%s\"; export REPOSITORY_NAME=\"%s\"; export HTTP_HOST=\"%s\"; %s",
+	snprintf(execute,execute_size-1,"export FILENAME=\"%s\"; export FILEPATH=\"%s\"; export DIRNAME=\"%s\"; export QUERY=\"%s\"; export FULL_URI=\"%s\"; export HTTP_METHOD=\"%s\"; export REPOSITORY_DIR=\"%s\"; export REPOSITORY_NAME=\"%s\"; export HTTP_HOST=\"%s\"; export TEMPLATE=\"%s\"; %s",
 					ht->filename,
 					ht->filepath,
 					ht->dirname,
@@ -74,6 +75,7 @@ do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *h
 					ht->sc_repository->filesystem,
 					ht->sc_repository->name,
 					ht->host,
+					ht->template,
 					sc_shell->sc_script->scriptpath);
 	int status;
 	char *field = malloc(EXECUTE_STDOUT_READLENGTH);

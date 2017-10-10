@@ -49,5 +49,7 @@ typedef struct http_traf
         uint64_t host_size;
         char *downloaduri;
         uint64_t downloaduri_size;
+        char *template;
+        uint64_t template_size;
 	slarht_conf_repository *sc_repository;
 } http_traf;

@@ -12,7 +12,7 @@ repository:
     old_version_repo: yumrepo_old
     shell_after:
       script:
-        - echo "filename=$FILENAME; filepath=$FILEPATH; dirname=$DIRNAME; query=$QUERY; fulluri=$FULL_URI; method=$HTTP_METHOD; dir=$REPOSITORY_DIR; reponame=$REPOSITORY_NAME; host=$HTTP_HOST"
+        - echo "filename=$FILENAME; filepath=$FILEPATH; dirname=$DIRNAME; query=$QUERY; fulluri=$FULL_URI; method=$HTTP_METHOD; dir=$REPOSITORY_DIR; reponame=$REPOSITORY_NAME; host=$HTTP_HOST; template=$TEMPLATE"
   - name: genrepo
     uri: /slarht/genrepo
     type: generic
