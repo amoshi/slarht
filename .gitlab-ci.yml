@@ -10,4 +10,4 @@ Build_rpm:
     - yum install -y libevent-devel libyaml-devel
     - rpmbuild -bb -D "git_tag $CI_BUILD_TAG" slarht.spec
     - >-
-      curl -H "X-slarht-template: Slarht released now with version \$FILENAME, download from \$DOWNLOADURI" -H "X-Auth-Token: $SLARHT_TOKEN" -T x86_64/*.rpm amoshi.ru/repo/yum/
+      curl -H "X-slarht-template: Slarht released now with version \$FILENAME, download from \$DOWNLOADURI now" -H "X-Auth-Token: $SLARHT_TOKEN" -T x86_64/*.rpm amoshi.ru/repo/yum/
