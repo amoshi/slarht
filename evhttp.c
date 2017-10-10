@@ -227,7 +227,7 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		}
 //	}
 	ht->downloaduri = malloc(UCHAR_MAX);
-	snprintf(ht->downloaduri,UCHAR_MAX-1,"%s/%s/%s",ht->host,ht->sc_repository->uri,ht->filepath);
+	snprintf(ht->downloaduri,UCHAR_MAX-1,"http://%s/%s/%s",ht->host,ht->sc_repository->uri,ht->filepath);
 
 	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_YUM )
 		rpmburner(ht);
