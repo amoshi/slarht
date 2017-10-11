@@ -64,10 +64,16 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	char *file_cache_path;
 	uint64_t i, file_cache = 0;
 	char *nodata = copy_init("nodata");;
+	char *emptydata = copy_init("");;
 	ht->host = nodata;
+	ht->_template = nodata;
+	ht->pkg_architecture = NULL;
+	ht->pkg_distribution = NULL;
 	ht->host_size = 7;
-	ht->template = nodata;
-	ht->template_size = 7;
+	ht->_template_size = 7;
+	ht->pkg_architecture_size = 0;
+	ht->pkg_distribution_size = 0;
+	ht->prefix_repository_url = emptydata;
 
 	ht->method_id=evhttp_request_get_command(req);
 	int querycodetype=ht->method_id;
@@ -105,9 +111,13 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		ht->headers[i].key = header->key;
 		ht->headers[i].value = header->value;
 		if ( !strcasecmp(ht->headers[i].key, "Host") )
-			ht->host=header->value, ht->host_size=strlen( ht->host );
+			ht->host=header->value, ht->host_size=strlen( header->value );
 		if ( !strcasecmp(ht->headers[i].key, "X-slarht-template") )
-			ht->template=header->value, ht->host_size=strlen( ht->template );
+			ht->_template=header->value, ht->host_size=strlen( header->value );
+		if ( !strcasecmp(ht->headers[i].key, "X-architecture") )
+			ht->pkg_architecture=header->value, ht->pkg_architecture_size=strlen( header->value );
+		if ( !strcasecmp(ht->headers[i].key, "X-distribution") )
+			ht->pkg_distribution=header->value, ht->pkg_distribution_size=strlen( header->value );
 	}
  
 	buf = evhttp_request_get_input_buffer(req);
@@ -229,8 +239,6 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 			ht->args = NULL;
 		}
 //	}
-	ht->downloaduri = malloc(UCHAR_MAX);
-	snprintf(ht->downloaduri,UCHAR_MAX-1,"http://%s/%s/%s",ht->host,ht->sc_repository->uri,ht->filepath);
 
 	repo_conf *rconf = NULL;
 	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_YUM )
@@ -241,8 +249,19 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		rconf = deb_conf(ht);
 	else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_DOCKER )
 		rconf = generic_conf(ht);
-	repoburner(rconf);
-	
+	ht->downloaduri = malloc(UCHAR_MAX);
+	snprintf(ht->downloaduri,UCHAR_MAX-1,"http://%s/%s/%s/%s",ht->host,ht->sc_repository->uri,ht->prefix_repository_url,ht->filepath);
+	if ( rconf != NULL )
+	{
+		repoburner(rconf);
+	}
+	else
+	{
+		evbuffer_add_printf(returnbuffer, "{\n \"error\": \"%s\" }\n",ht->error_message);
+		evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
+		evbuffer_free(returnbuffer);
+		return;
+	}
 
 	if ( querycodetype == EVHTTP_REQ_PUT || querycodetype == EVHTTP_REQ_POST )
 		free(data);

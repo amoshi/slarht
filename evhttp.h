@@ -43,6 +43,8 @@ typedef struct http_traf
         uint64_t full_uri_size;
         char *data;
         char *file_cache_path;
+        char *error_message;
+        char *prefix_repository_url;
         uint64_t data_size;
         http_kv *args;
         http_kv *headers;
@@ -52,8 +54,12 @@ typedef struct http_traf
         uint64_t host_size;
         char *downloaduri;
         uint64_t downloaduri_size;
-        char *template;
-        uint64_t template_size;
+        char *_template;
+        uint64_t _template_size;
+        char *pkg_distribution;
+	uint64_t pkg_distribution_size;
+        char *pkg_architecture;
+	uint64_t pkg_architecture_size;
 	slarht_conf_repository *sc_repository;
 } http_traf;
 

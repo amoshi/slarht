@@ -64,7 +64,7 @@ do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *h
 					ht->sc_repository->name,
 					ht->host,
 					ht->downloaduri,
-					ht->template,
+					ht->_template,
 					sc_shell->sc_script->scriptpath);
 	snprintf(execute,execute_size-1,"export FILENAME=\"%s\"; export FILEPATH=\"%s\"; export DIRNAME=\"%s\"; export QUERY=\"%s\"; export FULL_URI=\"%s\"; export HTTP_METHOD=\"%s\"; export REPOSITORY_DIR=\"%s\"; export REPOSITORY_NAME=\"%s\"; export HTTP_HOST=\"%s\"; export DOWNLOADURI=\"%s\"; export TEMPLATE=\"%s\"; %s",
 					ht->filename,
@@ -77,7 +77,7 @@ do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *h
 					ht->sc_repository->name,
 					ht->host,
 					ht->downloaduri,
-					ht->template,
+					ht->_template,
 					sc_shell->sc_script->scriptpath);
 	int status;
 	char *field = malloc(EXECUTE_STDOUT_READLENGTH);
