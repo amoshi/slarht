@@ -54,7 +54,7 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	struct evbuffer *buf;
 	slarht_conf_general *sc_general = arg;
 
-	mkdir(sc_general->tmpdir);
+	mkdirp(sc_general->tmpdir);
 
 	int no_http_args = 0;
 	http_traf *ht = malloc(sizeof(http_traf));
