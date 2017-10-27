@@ -19,11 +19,16 @@
 #define DEPLOY_METHOD_NO 0
 #define DEPLOY_METHOD_SCRIPT 1
 #define DEPLOY_METHOD_PROXYING 2
+#define DEPLOY_METHOD_PUSHTODIR 3
+#define DEPLOY_METHOD_POST_NO 0
+#define DEPLOY_METHOD_POST_FUNC 1
 
 typedef struct http_kv
 {
         char *key;
+	size_t key_size;
         char *value;
+	size_t value_size;
 } http_kv;
 
 typedef struct http_traf
@@ -60,6 +65,8 @@ typedef struct http_traf
 	uint64_t pkg_distribution_size;
         char *pkg_architecture;
 	uint64_t pkg_architecture_size;
+        char *content_type;
+	uint64_t content_type_size;
 	slarht_conf_repository *sc_repository;
 } http_traf;
 
@@ -68,5 +75,8 @@ typedef struct repo_conf
 	char *command;
 	size_t command_size;
 	int deploy_method;
+	int deploy_method_post;
 	http_traf *ht;
+	void (*func)(void*);
+	void *arg;
 } repo_conf;

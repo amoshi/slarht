@@ -5,6 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <limits.h>
+#include <inttypes.h>
  
 #include <event.h>
 #include <evhttp.h>
@@ -13,9 +14,11 @@
 #include "evhttp.h"
 #include "config_yaml.h"
 #include "mkdirp.h"
+#include "post.h"
 #include "rpm.h"
 #include "generic.h"
 #include "deb.h"
+#include "pypi.h"
 //#include "rpmburner.h"
 
 http_traf *http_traf_initialize(uint64_t size)
@@ -63,6 +66,7 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	char *data;
 	char *file_cache_path;
 	uint64_t i, file_cache = 0;
+	uint64_t files_count = 1;
 	char *nodata = copy_init("nodata");;
 	char *emptydata = copy_init("");;
 	ht->host = nodata;
@@ -74,6 +78,7 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	ht->pkg_architecture_size = 0;
 	ht->pkg_distribution_size = 0;
 	ht->prefix_repository_url = emptydata;
+	postdata *pstdat;
 
 	ht->method_id=evhttp_request_get_command(req);
 	int querycodetype=ht->method_id;
@@ -118,6 +123,8 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 			ht->pkg_architecture=header->value, ht->pkg_architecture_size=strlen( header->value );
 		if ( !strcasecmp(ht->headers[i].key, "X-distribution") )
 			ht->pkg_distribution=header->value, ht->pkg_distribution_size=strlen( header->value );
+		if ( !strcasecmp(ht->headers[i].key, "Content-Type") )
+			ht->content_type=header->value, ht->content_type_size=strlen( header->value );
 	}
  
 	buf = evhttp_request_get_input_buffer(req);
@@ -158,6 +165,11 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	ht->filepath = copy_init_n(ht->query+ht->sc_repository->uri_size, filepath_size+1);
 	ht->filename = basename(ht->filepath,DIRBASENAME_B,filepath_size);
 	ht->filename_size = strlen(ht->filename);
+	if ( ht->filename_size == 0 )
+	{
+		snprintf(ht->filename,2,"%s","t");
+		ht->filename_size=2;
+	}
 	ht->dirname = basename(ht->filepath,DIRBASENAME_D,filepath_size);
 	ht->dirname_size = strlen(ht->dirname);
 	printf("filepath = %s{%d}\n",ht->filepath,ht->filepath_size);
@@ -165,9 +177,9 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	printf("dirname = %s{%d}\n",ht->dirname,ht->dirname_size);
 	puts("finish matching");
 	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_APT )
-	{
 		file_cache = 1;
-	}
+	if ( querycodetype == EVHTTP_REQ_POST )
+		file_cache = 1;
 
 	if ( querycodetype == EVHTTP_REQ_POST || querycodetype == EVHTTP_REQ_PUT )
 	{
@@ -186,8 +198,8 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 			snprintf(file_cache_dir,UCHAR_MAX-1,"%s/%lld.%09ld/%s",sc_general->tmpdir,now_time.tv_sec,now_time.tv_nsec,ht->dirname);
 			snprintf(file_cache_path,UCHAR_MAX-1,"%s/%s",file_cache_dir,ht->filename);
 			mkdirp(file_cache_dir);
-			printf("file_cache_path (%p) is %s\n", file_cache_path, file_cache_path);
-			printf("file_cache_dir (%p) is %s\n", file_cache_dir, file_cache_dir);
+			fprintf(stdout, "file_cache_path (%p) is %s\n", file_cache_path, file_cache_path);
+			fprintf(stdout, "file_cache_dir (%p) is %s\n", file_cache_dir, file_cache_dir);
 			
 			if ( ( fbuf = fopen (file_cache_path, "w") ) == NULL )
 			{	return;
@@ -212,11 +224,42 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	}
 	if (  querycodetype == EVHTTP_REQ_POST)
 	{
-		printf ("put into parser: %s\n", data);
-		evhttp_parse_query_str(data, http_args);
+		if ( startswith_matches_n(ht->content_type, "multipart/form-data", 19) == 19 )
+		{
+			printf("post multipart/form-data\n");
+			char *boundary = strstr(ht->content_type,POST_MULTIPART_BOUNDARY)+POST_MULTIPART_BOUNDARY_SIZE+1;
+			char *filename = gen_tmp_filename (sc_general->tmpdir, "http", "post");
+			mkdirp(filename);
+			pstdat = post_multipart_parse(file_cache_path, POST_MULTI_DATA_FROM_FILE, POST_MULTI_DATA_FROM_FILE, boundary, strlen(boundary), filename);
+
+			//int i;
+			//printf("kv_size=%"PRId64"\n", pstdat->kv_size);
+			//for ( i=0; i<pstdat->kv_size;
+			//	printf("kv[%d].key=%s(%zu)\n", i, pstdat->kv[i].key, pstdat->kv[i].key_size),
+			//	printf("kv[%d].value=%s(%zu)\n", i, pstdat->kv[i].value, pstdat->kv[i].value_size),
+			//	i++
+			//);
+			//printf("fkv_size=%"PRId64"\n", pstdat->fkv_size);
+			//for ( i=0; i<pstdat->fkv_size;
+			//	printf("fkv[%d].key=%s(%zu)\n", i, pstdat->fkv[i].key, pstdat->fkv[i].key_size),
+			//	printf("fkv[%d].value=%s(%zu)\n", i, pstdat->fkv[i].value, pstdat->fkv[i].value_size),
+			//	i++
+			//);
+			ht->args_len = pstdat->kv_size;
+			ht->args = pstdat->kv;
+			ht->file_cache_path = pstdat->fkv->value;
+			files_count = pstdat->fkv_size;
+			printf("files_count is %"PRIu64"\n",files_count);
+		}
+		else
+		{
+			printf ("put into parser: %s\n", data);
+			evhttp_parse_query_str(data, http_args);
+		}
 	}
 //	if ( querycodetype == EVHTTP_REQ_GET || querycodetype == EVHTTP_REQ_HEAD || querycodetype == EVHTTP_REQ_DELETE || querycodetype == EVHTTP_REQ_POST)
-//	{
+	else
+	{
 		if ( no_http_args == 0 )
 		{
 			for (i=0, http_arg = http_args->tqh_first; http_arg; http_arg = http_arg->next.tqe_next, i++)
@@ -238,49 +281,72 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 			ht->args_len = 0;
 			ht->args = NULL;
 		}
-//	}
-
-	repo_conf *rconf = NULL;
-	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_YUM )
-		rconf = rpm_conf(ht);
-	else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_GENERIC )
-		rconf = generic_conf(ht);
-	else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_APT )
-		rconf = deb_conf(ht);
-	else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_DOCKER )
-		rconf = generic_conf(ht);
-	ht->downloaduri = malloc(UCHAR_MAX);
-	snprintf(ht->downloaduri,UCHAR_MAX-1,"http://%s/%s/%s/%s",ht->host,ht->sc_repository->uri,ht->prefix_repository_url,ht->filepath);
-	if ( rconf != NULL )
-	{
-		repoburner(rconf);
 	}
-	else
+	printf("files_count is %zu\n",files_count);
+	for ( i = 0; i < files_count; i++ )
 	{
-		evbuffer_add_printf(returnbuffer, "{\n \"error\": \"%s\" }\n",ht->error_message);
+		if (  querycodetype == EVHTTP_REQ_POST)
+		{
+			ht->file_cache_path = pstdat->fkv[i].value;
+			filepath_size = strlen(pstdat->fkv[i].value);
+			ht->filepath_size = filepath_size;
+			ht->filepath = copy_init_n(pstdat->fkv[i].value, filepath_size+1);
+			ht->filename = basename(ht->filepath,DIRBASENAME_B,filepath_size);
+			ht->filename_size = strlen(ht->filename);
+			if ( ht->filename_size == 0 )
+			{
+				snprintf(ht->filename,2,"%s","t");
+				ht->filename_size=2;
+			}
+			ht->dirname = basename(ht->filepath,DIRBASENAME_D,filepath_size);
+			ht->dirname_size = strlen(ht->dirname);
+		}
+
+
+		repo_conf *rconf = NULL;
+		if ( ht->sc_repository->type_id == REPOSITORY_TYPE_YUM )
+			rconf = rpm_conf(ht);
+		else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_GENERIC )
+			rconf = generic_conf(ht);
+		else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_APT )
+			rconf = deb_conf(ht);
+		else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_DOCKER )
+			rconf = generic_conf(ht);
+		else if ( ht->sc_repository->type_id == REPOSITORY_TYPE_PYPI )
+			rconf = pypi_conf(ht, pstdat);
+		ht->downloaduri = malloc(UCHAR_MAX);
+		snprintf(ht->downloaduri,UCHAR_MAX-1,"http://%s/%s/%s/%s",ht->host,ht->sc_repository->uri,ht->prefix_repository_url,ht->filepath);
+		if ( rconf != NULL )
+		{
+			repoburner(rconf);
+		}
+		else
+		{
+			evbuffer_add_printf(returnbuffer, "{\n \"error\": \"%s\" }\n",ht->error_message);
+			evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
+			evbuffer_free(returnbuffer);
+			return;
+		}
+		if ( querycodetype == EVHTTP_REQ_PUT || querycodetype == EVHTTP_REQ_POST )
+			free(data);
+
+		if ( file_cache == 1 )
+		{
+			free(file_cache_path);
+		}
+
+		puts("");
+		printf("{\n \"repo\": \"%s\",\n \"path\": \"%s\",\n \"created\": \"%s\",\n \"createdBy\": \"%s\",\n \"downloadUri\": \"%s\",\n \"size\": %zu,\n \"checksums\":\n {\n  \"sha1\": \"%s\",\n  \"md5\":\"%s\"\n }\n}\n",ht->sc_repository->name, ht->filepath, "no", "no", ht->downloaduri, ht->data_size, "no","no");
+		evbuffer_add_printf(returnbuffer, "{\n \"repo\": \"%s\",\n \"path\": \"%s\",\n \"created\": \"%s\",\n \"createdBy\": \"%s\",\n \"downloadUri\": \"%s\",\n \"size\": %zu,\n \"checksums\":\n {\n  \"sha1\": \"%s\",\n  \"md5\":\"%s\"\n }\n}\n",ht->sc_repository->name, ht->filepath, "no", "no", ht->downloaduri, ht->data_size, "no","no");
 		evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
 		evbuffer_free(returnbuffer);
-		return;
+		free(ht->downloaduri);
+		if ( rconf->deploy_method=DEPLOY_METHOD_SCRIPT)
+		{
+			free(rconf->command);
+		}
+		free(rconf);
 	}
-
-	if ( querycodetype == EVHTTP_REQ_PUT || querycodetype == EVHTTP_REQ_POST )
-		free(data);
-
-	if ( file_cache == 1 )
-	{
-		free(file_cache_path);
-	}
-
-	puts("");
-	evbuffer_add_printf(returnbuffer, "{\n \"repo\": \"%s\",\n \"path\": \"%s\",\n \"created\": \"%s\",\n \"createdBy\": \"%s\",\n \"downloadUri\": \"%s\",\n \"size\": %zu,\n \"checksums\":\n {\n  \"sha1\": \"%s\",\n  \"md5\":\"%s\"\n }\n}\n",ht->sc_repository->name, ht->filepath, "no", "no", ht->downloaduri, ht->data_size, "no","no");
-	evhttp_send_reply(req, HTTP_OK, "Client", returnbuffer);
-	evbuffer_free(returnbuffer);
-	free(ht->downloaduri);
-	if ( rconf->deploy_method=DEPLOY_METHOD_SCRIPT)
-	{
-		free(rconf->command);
-	}
-	free(rconf);
 	return;
 }
 

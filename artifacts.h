@@ -15,3 +15,9 @@ typedef struct exdata
 {
         char *command;
 } exdata;
+typedef struct pushdir_t
+{
+	char *from;
+	char *to;
+        slarht_conf_repository *sc_repository;
+} pushdir_t;

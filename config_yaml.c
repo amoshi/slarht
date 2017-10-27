@@ -8,25 +8,6 @@
 #include <sys/stat.h>
 #include "config_yaml.h"
 
-char* copy_init(char *str)
-{
-	char *ret;
-	size_t len = strlen(str)+1;
-	ret = calloc(1,len);
-	ret[0]='\0';
-	strncpy(ret,str,len-1);
-	return ret;
-}
-
-char* copy_init_n(char *str, size_t len)
-{
-	char *ret;
-	ret = calloc(1,len);
-	ret[0]='\0';
-	strncpy(ret,str,len-1);
-	return ret;
-}
-
 slarht_conf_user *sc_user_init(size_t num)
 {
         slarht_conf_user *sc_user = calloc(sizeof(slarht_conf_user),1);
@@ -444,6 +425,8 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 					sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->type_id = REPOSITORY_TYPE_APT;
 				if ( !strcmp(event->data.scalar.value,"docker") )
 					sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->type_id = REPOSITORY_TYPE_DOCKER;
+				if ( !strcmp(event->data.scalar.value,"pypi") )
+					sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->type_id = REPOSITORY_TYPE_PYPI;
 				
 			}
 			if ( !strcmp(buf, "max_size") )

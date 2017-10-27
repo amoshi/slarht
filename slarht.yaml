@@ -33,3 +33,23 @@ repository:
     shell_before:
       script:
         - echo "$DIRNAME"
+  - name: maven
+    uri: /slarht/maven
+    type: generic
+    filesystem: /var/www/repo/maven
+    max_version_artifacts: 5
+    max_size: 8g
+    old_version_repo: maven_old
+    shell_before:
+      script:
+        - echo "$DIRNAME"
+  - name: pypi
+    uri: /slarht/pypi
+    type: pypi
+    filesystem: /var/www/repo/pypi
+    max_version_artifacts: 5
+    max_size: 8g
+    old_version_repo: pypi_old
+    shell_before:
+      script:
+        - echo "$DIRNAME"

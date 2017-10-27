@@ -1,6 +1,7 @@
 #include <string.h>
 #include <limits.h>
 #include "artifacts.h"
+#include "mkdirp.h"
 #define EXECUTE_STDOUT_READLENGTH 30000
 int artifact_write(wrdata *write_data)
 {
@@ -23,6 +24,22 @@ int artifact_write(wrdata *write_data)
 	fwrite(write_data->data,1,write_data->data_size,artifact_dest);
 	//fprintf(artifact_dest,"%s",write_data->data);
 	fclose(artifact_dest);
+	return 0;
+}
+
+int artifact_pushtodir( pushdir_t *pshdir )
+{
+	printf("push cached file %s to %s\n", pshdir->from, pshdir->to);
+	FILE *artifact_dest;
+	char dest[FILENAME_MAX];
+	snprintf(dest,FILENAME_MAX,"%s/%s",pshdir->sc_repository->filesystem,pshdir->to);
+	char *artifact_dest_dir = basename(dest, DIRBASENAME_D,strlen(dest));
+	char *artifact_dest_base = basename(dest, DIRBASENAME_B,strlen(dest));
+	mkdirp(artifact_dest_dir);
+	rename ( pshdir->from, dest );
+
+	free (artifact_dest_dir);
+	free (artifact_dest_base);
 	return 0;
 }
 

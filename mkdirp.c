@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <time.h>
 #include "mkdirp.h"
 
 size_t get_rec_dir (char *str, size_t len, uint64_t num, int *fin)
@@ -61,7 +62,12 @@ char *basename(char *str, int mod, size_t str_size)
 {
 	char *s;
 	char *tmp;
+	if (str_size < 2)	str_size+=2;
 	s = malloc(str_size);
+	if ( str_size < 3 )
+	{
+		return s;
+	}
 	uint64_t b;
 	for (tmp = str; ; tmp++ )
 	{
@@ -79,4 +85,18 @@ char *basename(char *str, int mod, size_t str_size)
 		strncpy(s,str+b+1,str_size-b);
 	}
 	return s;
+}
+
+char *gen_tmp_filename(char *dir, char *dirname, char *fname)
+{
+	char *file_cache_path = malloc(FILENAME_MAX);
+	char file_cache_dir[FILENAME_MAX];
+	struct timespec now_time;
+	clock_gettime(CLOCK_REALTIME, &now_time);
+	snprintf(file_cache_dir,FILENAME_MAX,"%s/%lld.%09ld/%s",dir,now_time.tv_sec,now_time.tv_nsec,dirname);
+	snprintf(file_cache_path,FILENAME_MAX,"%s/%s",file_cache_dir,fname);
+	mkdirp(file_cache_dir);
+	fprintf(stdout, "file_cache_path (%p) is %s\n", file_cache_path, file_cache_path);
+	fprintf(stdout, "file_cache_dir (%p) is %s\n", file_cache_dir, file_cache_dir);
+	return file_cache_path;
 }
