@@ -13,7 +13,7 @@ mstr get_dispdata_name(char *field, char *sep)
 	char *s = field+strlen(POST_MULTI_CONTENT_DISPOSITION);
 	char *p;
 	uint64_t field_size = strlen(s);
-	printf("s=%s(%"PRIu64")\n",s,field_size);
+	//printf("s=%s(%"PRIu64")\n",s,field_size);
 	uint64_t i;
 	for ( i=0; i<field_size && s[i]!=';'; i++ );
 	p = strstr(s,sep);
@@ -27,7 +27,7 @@ mstr get_dispdata_name(char *field, char *sep)
 	{
 		p+=strlen(sep);
 		s = p;
-		printf("searching %s in %s\n","\"", s);
+		//printf("searching %s in %s\n","\"", s);
 		p = strstr(s, "\"");
 		if ( p == NULL )
 		{
@@ -35,7 +35,7 @@ mstr get_dispdata_name(char *field, char *sep)
 			ms.s[0]='\0';
 			ms.l = 0;
 		}
-		printf("dif: %p - %p\n",p,s);
+		//printf("dif: %p - %p\n",p,s);
 		i = p-s;
 		ms.s = malloc (i);
 		printf("copying %s with length %"PRIu64"\n",s,i);
@@ -153,7 +153,6 @@ postdata* post_multipart_parse(char *data, size_t len, int mode, char *boundary,
 					fgets(field, POST_STRLEN_SIZE-1, fd);
 					while ( ( stt = startswith_matches_n(field+2, boundary, boundary_size) ) != boundary_size )
 					{
-						printf("6field=%s\n",field);
 						if ( stt == boundary_size ) break;
 						if ( ( carsym = charfind (field, '\r') ) != -1 )
 							field[carsym]='\0';
@@ -168,11 +167,8 @@ postdata* post_multipart_parse(char *data, size_t len, int mode, char *boundary,
 							break;
 					}
 
-					printf("get name from kv[cnt].key=%s\n", kv[cnt].key);
-					printf("get name from kv[cnt].value=%s\n", kv[cnt].value);
 					if ( !strcmp(kv[cnt].key,"name") )
 						pstdat->gv.name=kv[cnt].value;
-					printf("get version from kv[cnt].key=%s\n", kv[cnt].key);
 					if ( !strcmp(kv[cnt].key,"version") )
 						pstdat->gv.version=kv[cnt].value;
 
