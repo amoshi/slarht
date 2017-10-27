@@ -1,4 +1,3 @@
-#include "evhttp.h"
 repo_conf* deb_conf(http_traf *ht)
 {
 	repo_conf *rconf = malloc(sizeof(repo_conf));
