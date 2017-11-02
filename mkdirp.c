@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <time.h>
+#include <unistd.h>
 #include "mkdirp.h"
 
 size_t get_rec_dir (char *str, size_t len, uint64_t num, int *fin)
@@ -93,10 +94,30 @@ char *gen_tmp_filename(char *dir, char *dirname, char *fname)
 	char file_cache_dir[FILENAME_MAX];
 	struct timespec now_time;
 	clock_gettime(CLOCK_REALTIME, &now_time);
-	snprintf(file_cache_dir,FILENAME_MAX,"%s/%lld.%09ld/%s",dir,now_time.tv_sec,now_time.tv_nsec,dirname);
+	snprintf(file_cache_dir,FILENAME_MAX,"%s/%ld.%09ld/%s",dir,now_time.tv_sec,now_time.tv_nsec,dirname);
 	snprintf(file_cache_path,FILENAME_MAX,"%s/%s",file_cache_dir,fname);
 	mkdirp(file_cache_dir);
 	fprintf(stdout, "file_cache_path (%p) is %s\n", file_cache_path, file_cache_path);
 	fprintf(stdout, "file_cache_dir (%p) is %s\n", file_cache_dir, file_cache_dir);
 	return file_cache_path;
+}
+
+int filetype(const char *path)
+{
+	struct stat path_stat;
+	stat(path, &path_stat);
+	if ( S_ISREG(path_stat.st_mode) == 1 )
+		return ISTAT_FILE;
+	if ( S_ISDIR(path_stat.st_mode) == 1 )
+		return ISTAT_DIRECTORY;
+	if ( S_ISCHR(path_stat.st_mode) == 1 )
+		return ISTAT_CHR;
+	if ( S_ISBLK(path_stat.st_mode) == 1 )
+		return ISTAT_BLOCKDEVICE;
+	if ( S_ISFIFO(path_stat.st_mode) == 1 )
+		return ISTAT_FIFO;
+	if ( S_ISSOCK(path_stat.st_mode) == 1 )
+		return ISTAT_SOCKET;
+	else
+		return ISTAT_NOTFOUND;
 }

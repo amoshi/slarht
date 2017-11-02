@@ -1,13 +1,14 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 char* copy_init(char *str)
 {
 	char *ret;
-	size_t len = strlen(str)+1;
+	size_t len = strlen(str);
 	ret = calloc(1,len);
 	ret[0]='\0';
-	strncpy(ret,str,len-1);
+	strncpy(ret,str,len);
 	return ret;
 }
 
@@ -16,7 +17,7 @@ char* copy_init_n(char *str, size_t len)
 	char *ret;
 	ret = calloc(1,len);
 	ret[0]='\0';
-	strncpy(ret,str,len-1);
+	strncpy(ret,str,len);
 	return ret;
 }
 

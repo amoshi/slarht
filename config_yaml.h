@@ -122,3 +122,5 @@ typedef struct slarht_conf_general
 	size_t sc_repository_size;
 	size_t sc_storage_size;
 } slarht_conf_general;
+
+slarht_conf_general *get_config(char *config_path);

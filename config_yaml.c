@@ -7,6 +7,7 @@
 #include <time.h>
 #include <sys/stat.h>
 #include "config_yaml.h"
+#include "strtls.h"
 
 slarht_conf_user *sc_user_init(size_t num)
 {
@@ -115,7 +116,7 @@ void sc_general_print(slarht_conf_general *sc_general)
 		sc_script_size = sc_general->scp_repository[i].sc_repository->between_script_size;
 		if ( sc_script_size == -1 )
 		{
-			printf("-------------shells: between onlyshell---------------\n",sc_script_size);
+			printf("-------------shells: between onlyshell---------------\n");
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->between_script[0].sc_script->scriptpath=%s\n",i,sc_general->scp_repository[i].sc_repository->between_script[0].sc_script->scriptpath);
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->between_script[0].sc_script->scriptpath_len=%zu\n",i,sc_general->scp_repository[i].sc_repository->between_script[0].sc_script->scriptpath_len);
 		}
@@ -136,7 +137,7 @@ void sc_general_print(slarht_conf_general *sc_general)
 		sc_script_size = sc_general->scp_repository[i].sc_repository->after_script_size;
 		if ( sc_script_size == -1 )
 		{
-			printf("-------------shells: after onlyshell---------------\n",sc_script_size);
+			printf("-------------shells: after onlyshell---------------\n");
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->after_script[0].sc_script->scriptpath=%s\n",i,sc_general->scp_repository[i].sc_repository->after_script[0].sc_script->scriptpath);
 			printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->after_script[0].sc_script->scriptpath_len=%zu\n",i,sc_general->scp_repository[i].sc_repository->after_script[0].sc_script->scriptpath_len);
 		}

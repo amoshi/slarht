@@ -20,3 +20,5 @@ typedef struct postdata
 	size_t fkv_size;
 	genvalues gv;
 } postdata;
+
+postdata* post_multipart_parse(char *data, size_t len, int mode, char *boundary, size_t boundary_size, char *tmp_dir);

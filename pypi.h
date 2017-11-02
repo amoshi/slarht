@@ -51,6 +51,7 @@ void create_pypi_index(char *dirname)
 
 repo_conf* pypi_conf(http_traf *ht, postdata *pstdat)
 {
+	uint64_t i;
 	free(ht->filepath);
 	free(ht->dirname);
 	free(ht->filename);
@@ -58,6 +59,9 @@ repo_conf* pypi_conf(http_traf *ht, postdata *pstdat)
 	printf("filacache=%s\n",ht->file_cache_path);
 	ht->filepath = malloc ( FILENAME_MAX );
 	snprintf(ht->filepath, FILENAME_MAX, "/%s/%s/%s", pstdat->gv.name, pstdat->gv.version, pstdat->fkv->key);
+	for(i = 0; ht->filepath[i]; i++){
+		ht->filepath[i] = tolower(ht->filepath[i]);
+	}
 	printf("string is /%s/%s/%s\n", pstdat->gv.name, pstdat->gv.version, pstdat->fkv->key);
 	printf("name=%s\nversion=%s\nfilename=%s\n", pstdat->gv.name, pstdat->gv.version, pstdat->fkv->key);
 	printf("fil e path is %s\n", ht->filepath);
