@@ -67,7 +67,7 @@ uint64_t get_file_size(FILE *fd)
 	return st.st_size;
 }
 
-char* gen_directory_index(char *fpath, char *repo)
+char* gen_directory_index(char *fpath, char *dirname, char *repo)
 {
 //<html><head><title>Index of /repo/mephi/evm/</title></head><body bgcolor="white"><h1>Index of /repo/mephi/evm/</h1><hr><pre>
 //<a href="../">../</a>
@@ -99,6 +99,7 @@ char* gen_directory_index(char *fpath, char *repo)
 				continue;
 			obj_nums++;
 			obj_lens += (strlen(entry->d_name)*2);
+			obj_lens += strlen(dirname);
 			printf(" +obj_lens = %zu (%s)\n", (strlen(entry->d_name)*2), entry->d_name );
 		}
 		printf(" ht_head_size = %zu\n", ht_head_size);
@@ -126,7 +127,7 @@ char* gen_directory_index(char *fpath, char *repo)
 				break;
 			printf(" adding %s to index\n", entry->d_name);
 			printf("pre curs=%zu; index=%s\n", curs, dirindex);
-			curs += sprintf(dirindex+curs, "<a href=\"%s\">%s</a>\n", entry->d_name, entry->d_name);
+			curs += sprintf(dirindex+curs, "<a href=\"%s/%s\">%s</a>\n", dirname, entry->d_name, entry->d_name);
 			printf("post curs=%zu; index=%s\n", curs, dirindex);
 		}
 		strncat(dirindex, HT_FOOT, ht_foot_size);
@@ -200,7 +201,7 @@ int do_Get(http_traf *ht, slarht_conf_general *sc_general, struct evhttp_request
 	else if ( ftype == ISTAT_DIRECTORY )
 	{
 		httpcode=HTTP_OK;
-		char *dindex = gen_directory_index(fpath, ht->filepath);
+		char *dindex = gen_directory_index(fpath, ht->dirname, ht->filepath);
 		evbuffer_add_printf(returnbuffer, dindex);
 		free(dindex);
 	}
