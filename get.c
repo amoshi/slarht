@@ -128,7 +128,7 @@ char* gen_directory_index(char *fpath, char *repo_uri, char *repo)
 				break;
 			printf(" adding %s to index\n", entry->d_name);
 			printf("pre curs=%zu; index=%s\n", curs, dirindex);
-			curs += sprintf(dirindex+curs, "<a href=\"%s/%s/%s\">%s</a>\n", repo_uri, fpath, entry->d_name, entry->d_name);
+			curs += sprintf(dirindex+curs, "<a href=\"%s/%s\">%s</a>\n", repo_uri, entry->d_name, entry->d_name);
 			printf("post curs=%zu; index=%s\n", curs, dirindex);
 		}
 		strncat(dirindex, HT_FOOT, ht_foot_size);
@@ -202,7 +202,7 @@ int do_Get(http_traf *ht, slarht_conf_general *sc_general, struct evhttp_request
 	else if ( ftype == ISTAT_DIRECTORY )
 	{
 		httpcode=HTTP_OK;
-		char *dindex = gen_directory_index(fpath, ht->sc_repository->uri, ht->filepath);
+		char *dindex = gen_directory_index(fpath, ht->query, ht->filepath);
 		evbuffer_add_printf(returnbuffer, dindex);
 		free(dindex);
 	}
