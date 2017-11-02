@@ -95,12 +95,15 @@ char* gen_directory_index(char *fpath, char *repo)
 		size_t ht_head_size = strlen(ht_head);
 		while ( (entry = readdir(dir)) != NULL)
 		{
-			if ( entry->d_name[0]!='.' && entry->d_name[1]!='.' )
-			{
-				obj_nums++;
-				obj_lens += (strlen(entry->d_name)*2);
-			}
+			if ( entry->d_name[0]=='.' && entry->d_name[1]=='.' )
+				continue;
+			obj_nums++;
+			obj_lens += (strlen(entry->d_name)*2);
+			printf(" +obj_lens = %zu (%s)\n", (strlen(entry->d_name)*2), entry->d_name );
 		}
+		printf(" ht_head_size = %zu\n", ht_head_size);
+		printf(" ht_foot_size = %zu\n", ht_foot_size);
+		printf(" obj_nums*17 = %zu\n", obj_nums*17);
 		obj_lens += ht_head_size;
 		obj_lens += ht_foot_size;
 		obj_lens += obj_nums*17;
@@ -117,6 +120,8 @@ char* gen_directory_index(char *fpath, char *repo)
 				continue;
 			if ( entry->d_name[0]=='.' && strlen(entry->d_name)==1 )
 				continue;
+			printf ("size=%zu\n",curs + ht_foot_size + 17 + strlen( entry->d_name )*2);
+			printf ("%"PRIu64" + %zu + %d + strlen(%s)*2{%zu} > %zu\n", curs, ht_foot_size, 17, entry->d_name, strlen( entry->d_name )*2, obj_lens);
 			if (curs + ht_foot_size + 17 + strlen( entry->d_name )*2 > obj_lens )
 				break;
 			printf(" adding %s to index\n", entry->d_name);
