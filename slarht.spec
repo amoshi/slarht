@@ -10,7 +10,7 @@
 
 Name:           %{service_name}
 Version:        %{git_tag}
-Release:        3%{?dist}
+Release:        4%{?dist}
 Summary:        Simple Lightweight Artefacts Restful HTtp repository
 Group:          Applications/Internet
 License:        Apache licence 2 version
