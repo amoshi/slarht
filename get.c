@@ -92,6 +92,7 @@ char* gen_directory_index(char *fpath, char *repo)
 		uint64_t curs = 0;
 		char ht_head[1000];
 		snprintf(ht_head, 1000, "<html><head><title>Index of %s</title></head><body bgcolor=\"white\"><h1>Index of %s</h1><hr><pre>\n", repo, repo);
+		size_t ht_head_size = strlen(ht_head);
 		while ( (entry = readdir(dir)) != NULL)
 		{
 			if ( entry->d_name[0]!='.' && entry->d_name[1]!='.' )
@@ -100,12 +101,12 @@ char* gen_directory_index(char *fpath, char *repo)
 				obj_lens += (strlen(entry->d_name)*2);
 			}
 		}
-		obj_lens += strlen(ht_head);
+		obj_lens += ht_head_size;
 		obj_lens += ht_foot_size;
 		obj_lens += obj_nums*17;
 
 		dirindex = malloc(obj_lens);
-		curs = strlen (ht_head);
+		curs = ht_head_size ;
 		strncpy(dirindex, ht_head, curs);
 		rewinddir(dir);
 		printf("len=%zu\n", obj_lens);
@@ -116,8 +117,9 @@ char* gen_directory_index(char *fpath, char *repo)
 				continue;
 			if ( entry->d_name[0]=='.' && strlen(entry->d_name)==1 )
 				continue;
-			if (curs + ht_foot_size + 17 + strlen( entry->d_name )*2 >= obj_lens )
+			if (curs + ht_foot_size + 17 + strlen( entry->d_name )*2 > obj_lens )
 				break;
+			printf(" adding %s to index\n", entry->d_name);
 			printf("pre curs=%zu; index=%s\n", curs, dirindex);
 			curs += sprintf(dirindex+curs, "<a href=\"%s\">%s</a>\n", entry->d_name, entry->d_name);
 			printf("post curs=%zu; index=%s\n", curs, dirindex);
