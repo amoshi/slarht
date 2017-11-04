@@ -1,6 +1,7 @@
 #include "evhttp.h"
 #include "artifacts.h"
 #include <limits.h>
+#include "get.h"
 int repoburner(repo_conf *rconf)
 {
 	printf("==================================================\n");
@@ -53,9 +54,17 @@ int repoburner(repo_conf *rconf)
 		if ( rconf->deploy_method==DEPLOY_METHOD_PUSHTODIR )
 			artifact_pushtodir( &pshdir );
 		if ( rconf->deploy_method_post == DEPLOY_METHOD_POST_FUNC )
-			(*rconf->func)(rconf->arg);
+			(*rconf->func)(rconf->arg, rconf->arg2);
 	}
 	do_shell_script(rconf->ht->sc_repository->after_script, rconf->ht->sc_repository->after_script_size, rconf->ht);
 	printf("repoburner stop\n");
 	printf("==================================================\n");
+}
+
+void repo_init(http_traf *ht)
+{
+	ht->index_generator = &gen_directory_index;
+	ht->dir_to_index = 0;
+	if ( ht->sc_repository->type_id == REPOSITORY_TYPE_PYPI )
+		pypi_init(ht);
 }

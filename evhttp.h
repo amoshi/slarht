@@ -25,49 +25,51 @@
 
 typedef struct http_kv
 {
-        char *key;
+	char *key;
 	size_t key_size;
-        char *value;
+	char *value;
 	size_t value_size;
 } http_kv;
 
 typedef struct http_traf
 {
-        int method_id;
-        char *method;
-        uint64_t method_size;
-        char *query;
-        uint64_t query_size;
+	int method_id;
+	char *method;
+	uint64_t method_size;
+	char *query;
+	uint64_t query_size;
 	char *filename;
 	int filename_size;
 	char *dirname;
 	int dirname_size;
 	char *filepath;
 	int filepath_size;
-        char *full_uri;
-        uint64_t full_uri_size;
-        char *data;
-        char *file_cache_path;
-        char *error_message;
-        char *prefix_repository_url;
-        uint64_t data_size;
-        http_kv *args;
-        http_kv *headers;
-        uint64_t args_len;
-        uint64_t headers_len;
-        char *host;
-        uint64_t host_size;
-        char *downloaduri;
-        uint64_t downloaduri_size;
-        char *_template;
-        uint64_t _template_size;
-        char *pkg_distribution;
+	char *full_uri;
+	uint64_t full_uri_size;
+	char *data;
+	char *file_cache_path;
+	char *error_message;
+	char *prefix_repository_url;
+	uint64_t data_size;
+	http_kv *args;
+	http_kv *headers;
+	uint64_t args_len;
+	uint64_t headers_len;
+	char *host;
+	uint64_t host_size;
+	char *downloaduri;
+	uint64_t downloaduri_size;
+	char *_template;
+	uint64_t _template_size;
+	char *pkg_distribution;
 	uint64_t pkg_distribution_size;
-        char *pkg_architecture;
+	char *pkg_architecture;
 	uint64_t pkg_architecture_size;
-        char *content_type;
+	char *content_type;
 	uint64_t content_type_size;
 	slarht_conf_repository *sc_repository;
+	char* (*index_generator)(void*, void*, void*);
+	int dir_to_index;
 } http_traf;
 
 typedef struct repo_conf
@@ -77,6 +79,7 @@ typedef struct repo_conf
 	int deploy_method;
 	int deploy_method_post;
 	http_traf *ht;
-	void (*func)(void*);
+	void (*func)(void*, void*);
 	void *arg;
+	void *arg2;
 } repo_conf;

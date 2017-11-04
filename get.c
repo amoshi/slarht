@@ -2,8 +2,10 @@
 #include <fcntl.h>
 #include <inttypes.h>
 #include <dirent.h>
+#include <string.h>
 #include "evhttp.h"
 #include "mkdirp.h"
+#include "get.h"
 #define HT_FOOT "</pre><hr></body></html>\n"
 
 uint64_t get_headers(struct evhttp_request *req, http_traf *ht)
@@ -156,6 +158,7 @@ int do_Get(http_traf *ht, slarht_conf_general *sc_general, struct evhttp_request
 	puts("2");
 
 	printf("repo: %s\n", ht->sc_repository->name);
+	repo_init(ht);
 
 
 	uint64_t filepath_size = strlen(ht->query+ht->sc_repository->uri_size);
@@ -181,8 +184,38 @@ int do_Get(http_traf *ht, slarht_conf_general *sc_general, struct evhttp_request
 	snprintf(fpath, FILENAME_MAX, "%s/%s", ht->sc_repository->filesystem, ht->filepath);
 	int ftype = filetype(fpath);
 
+	int no_category = 1;
+	if ( ftype == ISTAT_DIRECTORY )
+	{
+		no_category = 0;
+		int dir=1;
+		printf("dirtoindex=%d\n", ht->dir_to_index);
+		if ( ht->dir_to_index == 1 )
+		{
+			char indexfile[FILENAME_MAX];
+			snprintf(indexfile, FILENAME_MAX, "%s/%s", fpath, INDEXFILE);
+			printf("check for index file: %s\n", indexfile);
+			ftype = filetype(indexfile);
+			printf("ftype=%d\n", ftype);
+			if ( ftype == ISTAT_FILE )
+			{
+				printf("follow to index.html\n");
+				strncat(fpath, INDEXFILE, strlen(INDEXFILE)+1);
+				dir=0;
+			}
+		}
+		if ( dir == 1 )
+		{
+			httpcode=HTTP_OK;
+			//char *dindex = gen_directory_index(fpath, ht->query, ht->filepath);
+			char *dindex = (ht->index_generator)(fpath, ht->query, ht->filepath);
+			evbuffer_add_printf(returnbuffer, dindex);
+			free(dindex);
+		}
+	}
 	if ( ftype == ISTAT_FILE )
 	{
+		no_category = 0;
 		httpcode=HTTP_OK;
 		int fpath_fd = open(fpath, O_RDONLY);
 		if ( fpath_fd == 0 )
@@ -199,19 +232,13 @@ int do_Get(http_traf *ht, slarht_conf_general *sc_general, struct evhttp_request
 			evbuffer_add_file(returnbuffer, fpath_fd, 0, st.st_size);
 		}
 	}
-	else if ( ftype == ISTAT_DIRECTORY )
+	if ( ftype == ISTAT_NOTFOUND )
 	{
-		httpcode=HTTP_OK;
-		char *dindex = gen_directory_index(fpath, ht->query, ht->filepath);
-		evbuffer_add_printf(returnbuffer, dindex);
-		free(dindex);
-	}
-	else if ( ftype == ISTAT_NOTFOUND )
-	{
+		no_category = 0;
 		httpcode=HTTP_NOTFOUND;
 		evbuffer_add_printf(returnbuffer, "{\n \"error\": \"file not found\",\n \"code\": %d\n}\n", httpcode);
 	}
-	else
+	if ( no_category == 1 )
 	{
 		httpcode=403;
 		evbuffer_add_printf(returnbuffer, "{\n \"error\": \"no access to this function or file\",\n \"code\": %d\n}\n", httpcode);
