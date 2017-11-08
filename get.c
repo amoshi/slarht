@@ -6,6 +6,7 @@
 #include "evhttp.h"
 #include "mkdirp.h"
 #include "get.h"
+#include "strtls.h"
 #define HT_FOOT "</pre><hr></body></html>\n"
 
 uint64_t get_headers(struct evhttp_request *req, http_traf *ht)
@@ -35,52 +36,60 @@ uint64_t get_headers(struct evhttp_request *req, http_traf *ht)
 			ht->pkg_distribution=header->value, ht->pkg_distribution_size=strlen( header->value );
 		if ( !strcasecmp(ht->headers[i].key, "Content-Type") )
 			ht->content_type=header->value, ht->content_type_size=strlen( header->value );
+		if ( !strcasecmp(ht->headers[i].key, "X-Auth-Token") )
+			ht->authtoken=header->value, ht->authtoken_size=strlen( header->value );
+		if ( !strcasecmp(ht->headers[i].key, "Authorization") )
+			get_http_auth(header->value, ht);
 	}
 	return ht->headers_len;
 }
-get_args(http_traf *ht)
+int get_args(http_traf *ht)
 {
+	puts("start parsing args");
 	struct evkeyvalq *http_args;
+	struct evkeyval *http_arg;
 	http_args = malloc (sizeof(struct evkeyval)*50);
 	char *ptrtoargs = strstr(ht->full_uri,"?");
+	uint64_t i;
 	printf("%s, \n",ht->full_uri);
 	if ( ptrtoargs != NULL )
 	{
-		ht->query = alloc_and_copy_n(ht->full_uri, (size_t)(ptrtoargs-ht->full_uri) );
+		ht->query = copy_init_n(ht->full_uri, (size_t)(ptrtoargs-ht->full_uri) );
 		printf("size=%d\n",ptrtoargs-ht->full_uri);
-		printf ("put into parser: %s\n", ptrtoargs+1);
-		return evhttp_parse_query_str(ptrtoargs+1, http_args);
+		printf ("Args: %s\n", ptrtoargs+1);
+		evhttp_parse_query_str(ptrtoargs+1, http_args);
+		for (i=0, http_arg = http_args->tqh_first; http_arg; http_arg = http_arg->next.tqe_next, i++);
+		//{
+		//	printf("  %s: %s\n", http_arg->key, http_arg->value);
+		//}
+		ht->args_len = i;
+		ht->args = malloc(sizeof(http_kv)*ht->args_len);
+		for (i=0, http_arg = http_args->tqh_first; http_arg; http_arg = http_arg->next.tqe_next, i++)
+		{
+			ht->args[i].key = http_arg->key;
+			ht->args[i].value = http_arg->value;
+			printf("  %s: %s\n", http_arg->key, http_arg->value);
+		}
+		return 0;
 	}
 	else
 	{
-		ht->query = alloc_and_copy_n(ht->full_uri, ht->full_uri_size );
+		ht->query = copy_init_n(ht->full_uri, ht->full_uri_size );
+		ht->args_len = 0;
+		ht->args = NULL;
 		return -1;
 	}
 }
 
-uint64_t get_file_size(FILE *fd)
-{
-	struct stat st;
-	if (fstat(fd, &st) < 0)
-	{
-		perror("fstat");
-		return 0;
-	}
-	return st.st_size;
-}
 
-char* gen_directory_index(char *fpath, char *repo_uri, char *repo)
+
+
+char* gen_directory_index(void *fpath, void *repo_uri, void *repo)
 {
-//<html><head><title>Index of /repo/mephi/evm/</title></head><body bgcolor="white"><h1>Index of /repo/mephi/evm/</h1><hr><pre>
-//<a href="../">../</a>
-//<a href="2th">2th</a>                                                20-Oct-2017 15:50               21685
-//<a href="3rth">3rth</a>                                               27-Oct-2017 06:16               28033
-//<a href="less1.txt">less1.txt</a>                                          27-Oct-2017 06:16                3958
-//</pre><hr></body></html>
 	DIR *dir;
 	struct dirent *entry;
 	dir = opendir(fpath);
-	char *dirindex;
+	char *dirindex = NULL;
 	if (!dir)
 	{
 		printf("%s: ", fpath);
@@ -146,24 +155,33 @@ int do_Get(http_traf *ht, slarht_conf_general *sc_general, struct evhttp_request
 	if ( get_args(ht) != 0 )
 	{
 		printf("args parsing error\n");
-		//return 400;
 	}
-	puts("1");
 
 	if ( route_resolver(sc_general, ht) == -1 )
 	{
 		puts("no defaults, stopping query");
-		//return;
 	}
-	puts("2");
 
 	printf("repo: %s\n", ht->sc_repository->name);
 	repo_init(ht);
+
+	int auth = check_auth(ht);
+	printf("!!AUTH!! %d\n", auth);
+	if ( auth < ht->sc_repository->access_level )
+	{
+		int httpcode=403;
+		evbuffer_add_printf(returnbuffer, "{\n \"error\": \"no access for writing\",\n \"code\": %d\n}\n", httpcode);
+		evhttp_send_reply(req, httpcode, "Client", returnbuffer);
+		evbuffer_free(returnbuffer);
+		return httpcode;
+	}
 
 
 	uint64_t filepath_size = strlen(ht->query+ht->sc_repository->uri_size);
 	ht->filepath_size = filepath_size;
 	ht->filepath = copy_init_n(ht->query+ht->sc_repository->uri_size, filepath_size+1);
+	printf("ht->filepath %s\n", ht->filepath);
+	printf("filepath_size %"PRIu64"\n", filepath_size);
 	ht->filename = basename(ht->filepath,DIRBASENAME_B,filepath_size);
 	ht->filename_size = strlen(ht->filename);
 	if ( ht->filename_size == 0 )

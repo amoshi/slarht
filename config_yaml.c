@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include "config_yaml.h"
 #include "strtls.h"
+#include "b64.h"
 
 slarht_conf_user *sc_user_init(size_t num)
 {
@@ -62,6 +63,7 @@ void sc_general_print(slarht_conf_general *sc_general)
 		printf("\tuser i: %"PRIu64"\n",i);
 		printf("\tsc_general->scp_user[%"PRIu64"].sc_user->name=%s\n",i,sc_general->scp_user[i].sc_user->name);
 		printf("\tsc_general->scp_user[%"PRIu64"].sc_user->passwd=%s\n",i,sc_general->scp_user[i].sc_user->passwd);
+		printf("\tsc_general->scp_user[%"PRIu64"].sc_user->http_basic_hash = '%s' (%zu)\n",i,sc_general->scp_user[i].sc_user->http_basic_hash, sc_general->scp_user[i].sc_user->http_basic_hash_size);
 		printf("\tsc_general->scp_user[%"PRIu64"].sc_user->encryption_type=%d\n",i,sc_general->scp_user[i].sc_user->encryption_type);
 		printf("\tsc_general->scp_user[%"PRIu64"].sc_user->id=%"PRIu64"\n",i,sc_general->scp_user[i].sc_user->id);
 	}
@@ -90,6 +92,19 @@ void sc_general_print(slarht_conf_general *sc_general)
 		printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->storage=%s\n",i,sc_general->scp_repository[i].sc_repository->storage);
 		printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->uri=%s\n",i,sc_general->scp_repository[i].sc_repository->uri);
 		printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->uri_size=%"PRIu64"\n",i,sc_general->scp_repository[i].sc_repository->uri_size);
+
+		printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->acl_user_size=%"PRIu64"\n",i,sc_general->scp_repository[i].sc_repository->acl_user_size);
+		for ( j=0; j<sc_general->scp_repository[i].sc_repository->acl_user_size; j++)
+		{
+			printf("\t\t[%"PRIu64"] RW user: %s, password: %s, http_basic_hash: %s\n", j, sc_general->scp_repository[i].sc_repository->acl_user[j].sc_user->name, sc_general->scp_repository[i].sc_repository->acl_user[j].sc_user->passwd, sc_general->scp_repository[i].sc_repository->acl_user[j].sc_user->http_basic_hash);
+		}
+
+		printf("\tsc_general->scp_repository[%"PRIu64"].sc_repository->acl_ro_user_size=%"PRIu64"\n",i,sc_general->scp_repository[i].sc_repository->acl_ro_user_size);
+		for ( j=0; j<sc_general->scp_repository[i].sc_repository->acl_ro_user_size; j++)
+		{
+			printf("\t\t[%"PRIu64"] RO user: %s, password: %s, http_basic_hash: %s\n", j, sc_general->scp_repository[i].sc_repository->acl_ro_user[j].sc_user->name, sc_general->scp_repository[i].sc_repository->acl_ro_user[j].sc_user->passwd, sc_general->scp_repository[i].sc_repository->acl_ro_user[j].sc_user->http_basic_hash);
+		}
+
 		int64_t sc_script_size = sc_general->scp_repository[i].sc_repository->before_script_size;
 		printf("\tmas1(%p)\n",sc_general->scp_repository[i].sc_repository->before_script);
 		if ( sc_script_size == -1 )
@@ -159,6 +174,46 @@ void sc_general_print(slarht_conf_general *sc_general)
 	}
 
 
+}
+
+slarht_conf_user* get_user_by_name(slarth_conf_ptr_user *scp_user, size_t sc_user_len, char *str)
+{
+	uint64_t i;
+	for ( i=0; i<sc_user_len; i++ )
+	{
+		if ( !strcmp(scp_user[i].sc_user->name, str) )
+		{
+			return scp_user[i].sc_user;
+		}
+	}
+	fprintf(stderr, "no such user: %s\n", str);
+	return NULL;
+}
+
+slarht_conf_user* get_user_by_passwd(slarth_conf_ptr_user *scp_user, size_t sc_user_len, char *str)
+{
+	uint64_t i;
+	for ( i=0; i<sc_user_len; i++ )
+	{
+		if ( !strcmp(scp_user[i].sc_user->passwd, str) )
+		{
+			return scp_user[i].sc_user;
+		}
+	}
+	return NULL;
+}
+
+slarht_conf_user* get_user_by_http_basic_hash(slarth_conf_ptr_user *scp_user, size_t sc_user_len, char *str)
+{
+	uint64_t i;
+	for ( i=0; i<sc_user_len; i++ )
+	{
+		if ( !strcmp(scp_user[i].sc_user->http_basic_hash, str) )
+		{
+			return scp_user[i].sc_user;
+		}
+	}
+	return NULL;
 }
 
 slarht_conf_general *sc_general_init()
@@ -395,8 +450,13 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 			}
 			if ( !strcmp(buf, "passwd") )
 			{
+				size_t http_basic_hash_size = 0;
 				parse_next(parser,event);
 				sc_general->scp_user[sc_general->sc_user_size].sc_user->passwd = copy_init(event->data.scalar.value);
+				char http_basic_hash[FILENAME_MAX];
+				snprintf(http_basic_hash, FILENAME_MAX, "%s:%s", sc_general->scp_user[sc_general->sc_user_size].sc_user->name, sc_general->scp_user[sc_general->sc_user_size].sc_user->passwd);
+				sc_general->scp_user[sc_general->sc_user_size].sc_user->http_basic_hash = base64_encode(http_basic_hash, strlen(http_basic_hash), &http_basic_hash_size);
+				sc_general->scp_user[sc_general->sc_user_size].sc_user->http_basic_hash_size = http_basic_hash_size;
 				printf("this is user:passwd context\n");
 			}
 		}
@@ -411,6 +471,7 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 				parse_next(parser,event);
 				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository = sc_repository_init(sc_general->sc_repository_size);
 				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->name = copy_init(event->data.scalar.value);
+				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->access_level = 0;
 				printf("sc_general->scp_repository[%"PRIu64"].sc_repository->name(%p)=%s\n",sc_general->sc_repository_size,sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->name,sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->name);
 			}
 			if ( !strcmp(buf, "type") )
@@ -469,6 +530,40 @@ to_data(bool *seq_status, unsigned int *map_seq, slarht_conf_general *sc_general
 				parse_next(parser,event);
 				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->uri = copy_init(event->data.scalar.value);
 				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->uri_size = strlen(sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->uri);
+			}
+			if ( !strcmp(buf, "acl_user") )
+			{
+				printf("this is repository:acl_user context\n");
+				parse_next(parser,event);
+				parse_next(parser,event);
+				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_user = calloc(sizeof(slarth_conf_ptr_user), MAX_USERS_PER_REPO);
+				uint64_t i;
+				for ( i=0; event->type != YAML_SEQUENCE_END_EVENT; i++ )
+				{
+					sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_user[i].sc_user = get_user_by_name(sc_general->scp_user, sc_general->sc_user_size +1, event->data.scalar.value);
+					if ( sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_user[i].sc_user == NULL )
+						i--;
+					parse_next(parser,event);
+				}
+				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_user_size = i;
+			}
+			if ( !strcmp(buf, "acl_ro_user") )
+			{
+				printf("this is repository:acl_ro_user context\n");
+				parse_next(parser,event);
+				parse_next(parser,event);
+				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_ro_user = calloc(sizeof(slarth_conf_ptr_user), MAX_USERS_PER_REPO);
+				uint64_t i;
+				for ( i=0; event->type != YAML_SEQUENCE_END_EVENT; i++ )
+				{
+					sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_ro_user[i].sc_user = get_user_by_name(sc_general->scp_user, sc_general->sc_user_size +1, event->data.scalar.value);
+					if ( sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_ro_user[i].sc_user == NULL )
+						i--;
+					//printf("RO user: %s\n", sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_ro_user[i].sc_user->name);
+					parse_next(parser,event);
+				}
+				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->acl_ro_user_size = i;
+				sc_general->scp_repository[sc_general->sc_repository_size].sc_repository->access_level = 1;
 			}
 			if ( !strcmp(buf, "shell_before") || !strcmp(buf, "shell_between") || !strcmp(buf, "shell_after") )
 			{

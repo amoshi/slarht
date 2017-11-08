@@ -44,7 +44,7 @@ typedef struct http_traf
 	int dirname_size;
 	char *filepath;
 	int filepath_size;
-	char *full_uri;
+	const char *full_uri;
 	uint64_t full_uri_size;
 	char *data;
 	char *file_cache_path;
@@ -70,6 +70,11 @@ typedef struct http_traf
 	slarht_conf_repository *sc_repository;
 	char* (*index_generator)(void*, void*, void*);
 	int dir_to_index;
+	char *authtoken;
+	size_t authtoken_size;
+	char *http_basic_hash;
+	size_t http_basic_hash_size;
+	int auth;
 } http_traf;
 
 typedef struct repo_conf

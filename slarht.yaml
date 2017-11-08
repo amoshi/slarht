@@ -2,6 +2,12 @@ config: file
 listen: 0.0.0.0
 port: 8000
 
+user:
+  - name: pypitest
+    passwd: pypipass
+  - name: error
+    passwd: erpass
+
 repository:
   - name: yumrepo
     uri: /slarht/yumrepo
@@ -50,6 +56,8 @@ repository:
     max_version_artifacts: 5
     max_size: 8g
     old_version_repo: pypi_old
+    acl_user:
+      - pypitest
     shell_before:
       script:
         - echo "$DIRNAME"

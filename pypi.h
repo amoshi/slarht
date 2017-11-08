@@ -5,9 +5,9 @@
 #include <sys/stat.h>
 #include "get.h"
 
-void create_pypi_index(char *dirname, char *url);
+void create_pypi_index(void *dirname, void *url);
 
-void create_pypi_index(char *dirname, char *url)
+void create_pypi_index(void *dirname, void *url)
 {
 	puts("CREATE INDEX");
 	DIR *dir, *dir2;

@@ -57,10 +57,14 @@ post_write_command(exdata *exec_data)
 	while (fgets(field, EXECUTE_STDOUT_READLENGTH-1, repo_exec) != NULL)
 		printf("%s", field);
 	status = pclose(repo_exec);
+	if ( status == -1 )
+	{
+		fprintf(stderr, "pclose() fails for command from file %s\n", exec_data->command);
+	}
 	free(field);
 }
 
-do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *ht)
+void do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *ht)
 {
 	if (sc_shell_size < 1 && sc_shell_size !=-1)
 	{
@@ -107,6 +111,10 @@ do_shell_script(slarht_conf_shell *sc_shell, int64_t sc_shell_size, http_traf *h
 		while (fgets(field, EXECUTE_STDOUT_READLENGTH-1, script_exec) != NULL)
 			printf("%s", field);
 		status = pclose(script_exec);
+		if ( status == -1 )
+		{
+			fprintf(stderr, "pclose() fails for command from file %s\n", execute);
+		}
 	}
 	free(field);
 	free(execute);

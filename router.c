@@ -33,7 +33,7 @@ slarht_conf_repository *route_get_repository(slarht_conf_general *sc_general, ch
 			max=rc;
 			ret=sc_general->scp_repository[i].sc_repository;
 		}
-		if ( sc_general->scp_repository[i].sc_repository->type == REPOSITORY_TYPE_DEFAULT )
+		if ( sc_general->scp_repository[i].sc_repository->type_id == REPOSITORY_TYPE_DEFAULT )
 		{
 			def = sc_general->scp_repository[i].sc_repository;
 		}
@@ -64,7 +64,7 @@ int route_resolver(slarht_conf_general *sc_general, http_traf *ht)
 			max=rc;
 			ht->sc_repository=sc_general->scp_repository[i].sc_repository;
 		}
-		if ( sc_general->scp_repository[i].sc_repository->type == REPOSITORY_TYPE_DEFAULT )
+		if ( sc_general->scp_repository[i].sc_repository->type_id == REPOSITORY_TYPE_DEFAULT )
 		{
 			def = sc_general->scp_repository[i].sc_repository;
 		}

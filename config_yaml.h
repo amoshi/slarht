@@ -11,6 +11,7 @@
 #define MAX_USER_SIZE 1000
 #define MAX_REPOSITORY_SIZE 1000
 #define MAX_STORAGE_SIZE 1000
+#define MAX_USERS_PER_REPO 1000
 #define REPOSITORY_TYPE_GENERIC 0
 #define REPOSITORY_TYPE_YUM 1
 #define REPOSITORY_TYPE_APT 2
@@ -36,6 +37,8 @@ typedef struct slarht_conf_user
 	char *name;
 	char *passwd;
 	int encryption_type;
+	char* http_basic_hash;
+	size_t http_basic_hash_size;
 } slarht_conf_user;
 
 typedef struct slarht_conf_storage
@@ -62,6 +65,15 @@ typedef struct slarht_conf_shell
 	size_t value_size;
 } slarht_conf_shell;
 
+typedef struct slarth_conf_ptr_user {
+	slarht_conf_user *sc_user;
+} slarth_conf_ptr_user;
+
+typedef struct slarth_conf_ptr_storage {
+	slarht_conf_storage *sc_storage;
+} slarth_conf_ptr_storage;
+
+
 typedef struct slarht_conf_repository
 {
 	uint64_t id;
@@ -80,10 +92,10 @@ typedef struct slarht_conf_repository
 	slarht_conf_storage *storage_ptr;
 	char *acl_ro_network;
 	char *acl_network;
-	uint64_t *acl_user;
-	uint64_t *acl_ro_user;
-	int network_ro_vis;
-	int user_ro_vis;
+	slarth_conf_ptr_user *acl_user;
+	size_t acl_user_size;
+	slarth_conf_ptr_user *acl_ro_user;
+	size_t acl_ro_user_size;
 	int before_script_context;
 	int between_script_context;
 	int after_script_context;
@@ -93,19 +105,12 @@ typedef struct slarht_conf_repository
 	size_t between_script_size;
 	slarht_conf_shell *after_script;
 	size_t after_script_size;
+	int access_level;
 } slarht_conf_repository;
-
-typedef struct slarth_conf_ptr_user {
-	slarht_conf_user *sc_user;
-} slarth_conf_ptr_user;
 
 typedef struct slarth_conf_ptr_repository {
 	slarht_conf_repository *sc_repository;
 } slarth_conf_ptr_repository;
-
-typedef struct slarth_conf_ptr_storage {
-	slarht_conf_storage *sc_storage;
-} slarth_conf_ptr_storage;
 
 typedef struct slarht_conf_general
 {
@@ -124,3 +129,6 @@ typedef struct slarht_conf_general
 } slarht_conf_general;
 
 slarht_conf_general *get_config(char *config_path);
+slarht_conf_user* get_user_by_passwd(slarth_conf_ptr_user *scp_user, size_t sc_user_len, char *str);
+slarht_conf_user* get_user_by_name(slarth_conf_ptr_user *scp_user, size_t sc_user_len, char *str);
+slarht_conf_user* get_user_by_http_basic_hash(slarth_conf_ptr_user *scp_user, size_t sc_user_len, char *str);

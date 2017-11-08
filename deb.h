@@ -3,7 +3,7 @@ repo_conf* deb_conf(http_traf *ht)
 	repo_conf *rconf = malloc(sizeof(repo_conf));
 	char *command = malloc(SHRT_MAX);
 	char *prefix_repository_url = malloc(FILENAME_MAX);
-	size_t command_size = strlen(command);
+	//size_t command_size = strlen(command);
 	char *ns;
 	size_t nst;
 	char packagename[FILENAME_MAX];
@@ -28,9 +28,9 @@ repo_conf* deb_conf(http_traf *ht)
 	namesize = nst;
 	printf("namesize=%zu\n",namesize);
 	if ( architecture == NULL )
-		snprintf(command,SHRT_MAX-1,"reprepro --silent --ignore=extension -b '%s' -C %s includedeb general '%s'",ht->sc_repository->filesystem, distribution, ht->file_cache_path);
+		snprintf(command,SHRT_MAX,"reprepro --silent --ignore=extension -b '%s' -C %s includedeb general '%s'",ht->sc_repository->filesystem, distribution, ht->file_cache_path);
 	else
-		snprintf(command,SHRT_MAX-1,"reprepro --silent --ignore=extension -b '%s' -C %s -A %s includedeb general '%s'",ht->sc_repository->filesystem, distribution, architecture, ht->file_cache_path);
+		snprintf(command,SHRT_MAX,"reprepro --silent --ignore=extension -b '%s' -C %s -A %s includedeb general '%s'",ht->sc_repository->filesystem, distribution, architecture, ht->file_cache_path);
 	printf("strncpy(%zu);\n",namesize);
 	printf("strncpy(%p);\n", ht->filename);
 	printf("strncpy(%p);\n",packagename);

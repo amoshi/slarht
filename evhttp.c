@@ -39,13 +39,6 @@ http_traf *http_traf_initialize(uint64_t size)
 	return ht;
 }
 
-char *alloc_and_copy_n(char *data, size_t len)
-{
-	len++;
-	char *s = malloc(len);
-	snprintf(s,len,"%s",data);
-	return s;
-}
 
 void generic_request_handler(struct evhttp_request *req, void *arg)
 {
@@ -57,10 +50,12 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 
 	mkdirp(sc_general->tmpdir);
 
-	int no_http_args = 0;
+	//int no_http_args = 0;
 	http_traf *ht = malloc(sizeof(http_traf));
 	ht->full_uri = evhttp_request_get_uri(req);
 	ht->full_uri_size = strlen(ht->full_uri);
+	ht->authtoken_size = 0;
+	ht->http_basic_hash_size = 0;
 	uint64_t http_uri_size = ht->full_uri_size;
 	char *http_uri = ht->full_uri;
 	http_args = malloc (sizeof(struct evkeyval)*50);
@@ -85,15 +80,15 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 	int querycodetype=ht->method_id;
 	int method_id=ht->method_id;
 	switch (method_id) {
-		case EVHTTP_REQ_GET: ht->method = alloc_and_copy_n("GET", 3); ht->method_size=3; do_Get(ht, sc_general, req, returnbuffer); return;
-		case EVHTTP_REQ_POST: ht->method = alloc_and_copy_n("POST", 4); ht->method_size=4; break;
-		case EVHTTP_REQ_HEAD: ht->method = alloc_and_copy_n("HEAD", 4); ht->method_size=4; break;
-		case EVHTTP_REQ_PUT: ht->method = alloc_and_copy_n("PUT", 3); ht->method_size=3; break;
-		case EVHTTP_REQ_DELETE: ht->method = alloc_and_copy_n("DELETE", 6); ht->method_size=6; break;
-//		case EVHTTP_REQ_TRACE: ht->method = alloc_and_copy_n("TRACE", 5); ht->method_size=5; break;
-//		case EVHTTP_REQ_PATCH: ht->method = alloc_and_copy_n("PATCH", 5); ht->method_size=5; break;
-//		case EVHTTP_REQ_OPTIONS: ht->method = alloc_and_copy_n("OPTIONS", 7); ht->method_size=7; break;
-//		case EVHTTP_REQ_CONNECT: ht->method = alloc_and_copy_n("CONNECT", 7); ht->method_size=7; break;
+		case EVHTTP_REQ_GET: ht->method = copy_init_n("GET", 3); ht->method_size=3; do_Get(ht, sc_general, req, returnbuffer); return;
+		case EVHTTP_REQ_POST: ht->method = copy_init_n("POST", 4); ht->method_size=4; break;
+		case EVHTTP_REQ_HEAD: ht->method = copy_init_n("HEAD", 4); ht->method_size=4; break;
+		case EVHTTP_REQ_PUT: ht->method = copy_init_n("PUT", 3); ht->method_size=3; break;
+		case EVHTTP_REQ_DELETE: ht->method = copy_init_n("DELETE", 6); ht->method_size=6; break;
+//		case EVHTTP_REQ_TRACE: ht->method = copy_init_n("TRACE", 5); ht->method_size=5; break;
+//		case EVHTTP_REQ_PATCH: ht->method = copy_init_n("PATCH", 5); ht->method_size=5; break;
+//		case EVHTTP_REQ_OPTIONS: ht->method = copy_init_n("OPTIONS", 7); ht->method_size=7; break;
+//		case EVHTTP_REQ_CONNECT: ht->method = copy_init_n("CONNECT", 7); ht->method_size=7; break;
 		default:
 			evbuffer_add_printf(returnbuffer, "Method not allowed!\n");
 			evhttp_send_reply(req, HTTP_BADMETHOD, "Client", returnbuffer);
@@ -104,47 +99,16 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 
 	printf("enum=%d\n",evhttp_request_get_command(req));
  
-	printf("Received a %d request for %s\nHeaders:\n", ht->method, http_uri);
-	headers = evhttp_request_get_input_headers(req);
-	for (i=0, header = headers->tqh_first; header; header = header->next.tqe_next, i++)
-	{
-		printf("  %s: %s\n", header->key, header->value);
-	}
-	ht->headers_len=i;
-	ht->headers = malloc (sizeof (http_kv)*ht->headers_len );
-	for (i=0, header = headers->tqh_first; header; header = header->next.tqe_next, i++)
-	{
-		ht->headers[i].key = header->key;
-		ht->headers[i].value = header->value;
-		if ( !strcasecmp(ht->headers[i].key, "Host") )
-			ht->host=header->value, ht->host_size=strlen( header->value );
-		if ( !strcasecmp(ht->headers[i].key, "X-slarht-template") )
-			ht->_template=header->value, ht->host_size=strlen( header->value );
-		if ( !strcasecmp(ht->headers[i].key, "X-architecture") )
-			ht->pkg_architecture=header->value, ht->pkg_architecture_size=strlen( header->value );
-		if ( !strcasecmp(ht->headers[i].key, "X-distribution") )
-			ht->pkg_distribution=header->value, ht->pkg_distribution_size=strlen( header->value );
-		if ( !strcasecmp(ht->headers[i].key, "Content-Type") )
-			ht->content_type=header->value, ht->content_type_size=strlen( header->value );
-	}
+	get_headers(req, ht);
+
  
 	buf = evhttp_request_get_input_buffer(req);
 
 	if ( querycodetype == EVHTTP_REQ_GET || querycodetype == EVHTTP_REQ_HEAD || querycodetype == EVHTTP_REQ_DELETE || querycodetype == EVHTTP_REQ_PUT )
 	{
-		char *ptrtoargs = strstr(http_uri,"?");
-		printf("%s, \n",http_uri);
-		if ( ptrtoargs != NULL )
+		if ( get_args(ht) != 0 )
 		{
-			ht->query = alloc_and_copy_n(http_uri, (size_t)(ptrtoargs-http_uri) );
-			printf("size=%d\n",ptrtoargs-http_uri);
-			printf ("put into parser: %s\n", ptrtoargs+1);
-			evhttp_parse_query_str(ptrtoargs+1, http_args);
-		}
-		else
-		{
-			ht->query = alloc_and_copy_n(http_uri, http_uri_size );
-			no_http_args = 1;
+			printf("args parsing error\n");
 		}
 	}
 	else
@@ -161,6 +125,19 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 		return;
 	}
 	printf("repo: %s\n", ht->sc_repository->name);
+
+	int auth = check_auth(ht);
+	printf("!!AUTH!! %d\n", auth);
+	if ( auth != 2 )
+	{
+		int httpcode=403;
+		evbuffer_add_printf(returnbuffer, "{\n \"error\": \"no access for writing\",\n \"code\": %d\n}\n", httpcode);
+		evhttp_send_reply(req, httpcode, "Client", returnbuffer);
+		evbuffer_free(returnbuffer);
+		return;
+	}
+
+
 	uint64_t filepath_size = strlen(ht->query+ht->sc_repository->uri_size);
 	ht->filepath_size = filepath_size;
 	ht->filepath = copy_init_n(ht->query+ht->sc_repository->uri_size, filepath_size+1);
@@ -258,31 +235,7 @@ void generic_request_handler(struct evhttp_request *req, void *arg)
 			evhttp_parse_query_str(data, http_args);
 		}
 	}
-//	if ( querycodetype == EVHTTP_REQ_GET || querycodetype == EVHTTP_REQ_HEAD || querycodetype == EVHTTP_REQ_DELETE || querycodetype == EVHTTP_REQ_POST)
-	else
-	{
-		if ( no_http_args == 0 )
-		{
-			for (i=0, http_arg = http_args->tqh_first; http_arg; http_arg = http_arg->next.tqe_next, i++)
-			{
-				printf("  %s: %s\n", http_arg->key, http_arg->value);
-			}
-			ht->args_len = i;
-			ht->args = malloc(sizeof(http_kv)*ht->args_len);
-			for (i=0, http_arg = http_args->tqh_first; http_arg; http_arg = http_arg->next.tqe_next, i++)
-			{
-				ht->args[i].key = http_arg->key;
-				ht->args[i].value = http_arg->value;
-				printf("COPYING %s and %s\n",ht->args[i].key,ht->args[i].value);
-				printf("  %s: %s\n", http_arg->key, http_arg->value);
-			}
-		}
-		else
-		{
-			ht->args_len = 0;
-			ht->args = NULL;
-		}
-	}
+
 	// deploy and answers
 	// for POST and PUT (uploading artifact)
 	if ( querycodetype == EVHTTP_REQ_POST || querycodetype == EVHTTP_REQ_PUT )

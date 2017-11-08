@@ -24,8 +24,9 @@ Simple Lightweight Artefacts Restful HTtp repository
 
 %build
 cd %{_sourcedir}
-#cc -levent evhttp.c -o slarht
+make analyzer
 make
+make test
 
 %install
 %{__mkdir_p} ${RPM_BUILD_ROOT}/usr/bin/

@@ -13,6 +13,8 @@ all:
 	cc -c repoburner.c -lconfig_yaml -lartifacts -Lcaches/ -o caches/repoburner.o
 	cc -c post.c -lconfig_yaml -lartifacts -Lcaches/ -o caches/post.o
 	cc -c get.c -lconfig_yaml -lartifacts -Lcaches/ -o caches/get.o
+	cc -c b64.c -lconfig_yaml -lartifacts -Lcaches/ -o caches/b64.o
+	cc -c auth.c -lconfig_yaml -lartifacts -Lcaches/ -o caches/auth.o
 	ar rcs caches/librpmburner.a caches/rpmburner.o
 	ar rcs caches/libconfig_yaml.a caches/config_yaml.o
 	ar rcs caches/libmkdirp.a caches/mkdirp.o
@@ -24,6 +26,8 @@ all:
 	ar rcs caches/librepoburner.a caches/repoburner.o
 	ar rcs caches/libpost.a caches/post.o
 	ar rcs caches/libget.a caches/get.o
+	ar rcs caches/libb64.a caches/b64.o
+	ar rcs caches/libauth.a caches/auth.o
 	cc	evhttp.c \
 		-levent \
 		-lconfig_yaml \
@@ -39,7 +43,15 @@ all:
 		-lstrtls \
 		-lpost \
 		-lget \
+		-lb64 \
+		-lauth \
 		-Lcaches/ \
 		-o caches/slarht
 clean:
 	rm -rf caches/
+
+test:
+	sh ./tests/pypi/pypi.sh
+
+analyzer:
+	clang --analyze *.c

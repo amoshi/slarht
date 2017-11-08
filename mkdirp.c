@@ -64,6 +64,7 @@ char *basename(char *str, int mod, size_t str_size)
 	char *s;
 	char *tmp;
 	if (str_size < 2)	str_size+=2;
+	char *loh = malloc(str_size);
 	s = malloc(str_size);
 	if ( str_size < 3 )
 	{
